@@ -21,6 +21,7 @@ public class Connect4Game {
 
 	public bool started { get; private set; } = false;
 	public bool gameOver { get; private set; } = false;
+	public bool draw { get; private set; } = false;
 	public bool nextTurnYellow { get; private set; } = true;
 	public DiscordUser redPlayer { get; private set; }
 	public DiscordUser yellowPlayer { get; private set; }
@@ -49,11 +50,21 @@ public class Connect4Game {
 	}
 
 	public DiscordMessageBuilder Display() {
+		string description = "";
+		description += RED + ": " + redPlayer.Mention;
+		if (gameOver && !draw && !nextTurnYellow)
+			description += " :confetti_ball:";
+		description += "\n";
+		description += YELLOW + ": " + yellowPlayer.Mention;
+		if (gameOver && !draw && nextTurnYellow)
+			description += " :confetti_ball";
+		description += "\n";
+		description += DisplayBoard();
 		DiscordMessageBuilder response = new DiscordMessageBuilder()
 			.AddEmbed(new DiscordEmbedBuilder()
 				.WithColor(nextTurnYellow ? DiscordColor.Yellow : DiscordColor.Red)
 				.WithAuthor(nextTurnYellow ? yellowPlayer.Username : redPlayer.Username, null, nextTurnYellow ? yellowPlayer.AvatarUrl : redPlayer.AvatarUrl)
-				.WithDescription(RED + ": " + redPlayer.Mention + (gameOver && !nextTurnYellow ? " :confetti_ball:" : "") + "\n" + YELLOW + ": " + yellowPlayer.Mention + (gameOver && nextTurnYellow ? " :confetti_ball:" : "") + "\n" + DisplayBoard())
+				.WithDescription(description)
 				.WithFooter(StatusMessage(), client.CurrentUser.AvatarUrl)
 				.WithTimestamp(timestamp)
 			);
@@ -140,6 +151,14 @@ public class Connect4Game {
 	}
 
 	private void UpdateStatus() {
+		draw = true;
+		for (int i = 0; i < 6; i++)
+			if (ColumnFree(i)) {
+				draw = false;
+				break;
+			}
+		if (draw)
+			gameOver = true;
 		if (!gameOver)
 			nextTurnYellow = !nextTurnYellow;
 	}
@@ -157,7 +176,10 @@ public class Connect4Game {
 
 	private string StatusMessage() {
 		if (gameOver)
-			return String.Format("{0} won!", (nextTurnYellow ? yellowPlayer : redPlayer).Username);
+			if (!draw)
+				return String.Format("{0} won!", (nextTurnYellow ? yellowPlayer : redPlayer).Username);
+			else
+				return "It's a draw.";
 		else
 			return String.Format("{0}'s turn.", (nextTurnYellow ? yellowPlayer : redPlayer).Username);
 	}
