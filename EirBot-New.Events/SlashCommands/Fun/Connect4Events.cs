@@ -5,9 +5,10 @@ using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Enums;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
+using EirBot_New.Attributes;
 
 namespace EirBot_New.Events.Connect4;
-[SlashCommandGroup("Fun", "Fun and games", true, false), EventHandler]
+[SlashCommandGroup("Fun", "Fun and games", true, false), EventHandler, GuildOnlyApplicationCommands]
 public class Connect4Events : ApplicationCommandsModule {
 	private static Dictionary<long, Connect4Game> games = new Dictionary<long, Connect4Game>();
 
