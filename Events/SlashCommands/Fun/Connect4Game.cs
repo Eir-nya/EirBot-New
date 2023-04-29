@@ -22,7 +22,6 @@ public class Connect4Game {
 	public bool started { get; private set; } = false;
 	public bool gameOver { get; private set; } = false;
 	public bool nextTurnYellow { get; private set; } = true;
-	private bool winnerYellow = false;
 	public DiscordUser redPlayer { get; private set; }
 	public DiscordUser yellowPlayer { get; private set; }
 
@@ -158,7 +157,7 @@ public class Connect4Game {
 
 	private string StatusMessage() {
 		if (gameOver)
-			return String.Format("{0} won!", (winnerYellow ? yellowPlayer : redPlayer).Username);
+			return String.Format("{0} won!", (nextTurnYellow ? yellowPlayer : redPlayer).Username);
 		else
 			return String.Format("{0}'s turn.", (nextTurnYellow ? yellowPlayer : redPlayer).Username);
 	}
