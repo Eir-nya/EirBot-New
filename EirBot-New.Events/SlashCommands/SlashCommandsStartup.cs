@@ -14,9 +14,11 @@ public class SlashCommandsStartup {
 
 		foreach (Type t in Assembly.GetExecutingAssembly().GetTypes())
 			if (t.IsSubclassOf(typeof(ApplicationCommandsModule))) {
-				if (t.GetCustomAttribute(typeof(GuildOnlyApplicationCommandsAttribute)) != null) {
+				GuildOnlyApplicationCommandsAttribute guildOnlyAttr = (GuildOnlyApplicationCommandsAttribute)t.GetCustomAttribute(typeof(GuildOnlyApplicationCommandsAttribute));
+				if (guildOnlyAttr != null) {
 					foreach (DiscordGuild g in client.Guilds.Values)
-						commands.RegisterGuildCommands(t, g.Id);
+						if (guildOnlyAttr.guildList.Contains<ulong>(g.Id) || guildOnlyAttr.guildList.Length == 0)
+							commands.RegisterGuildCommands(t, g.Id);
 				} else
 					commands.RegisterGlobalCommands(t);
 			}
