@@ -2,11 +2,13 @@ using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 // using DisCatSharp.Interactivity.Extensions;
+using EirBot_New.Serialization;
 using System.Reflection;
 
 namespace EirBot_New;
 public class Bot : IDisposable {
 	private readonly DiscordShardedClient client;
+	public BotDataCollection savedData = new BotDataCollection();
 
 	public static Dictionary<DiscordClient, Bot> botInstances = new Dictionary<DiscordClient, Bot>();
 	public static Bot GetBot(DiscordClient cli) { return botInstances[cli]; }
