@@ -8,11 +8,15 @@ namespace EirBot_New;
 public class Bot : IDisposable {
 	private readonly DiscordShardedClient client;
 
+	public static Dictionary<DiscordClient, Bot> botInstances = new Dictionary<DiscordClient, Bot>();
+	public static Bot GetBot(DiscordClient cli) { return botInstances[cli]; }
+
 	public Bot(DiscordShardedClient client) {
 		this.client = client;
 	}
 
 	public async Task Init() {
+		client.Ready += async (cli, e) => await Register(cli, this);
 		client.Ready += RegisterEvents;
 		client.Ready += SetInitialStatus;
 		await client.StartAsync();
@@ -24,6 +28,12 @@ public class Bot : IDisposable {
 			disClient.Dispose();
 		GC.SuppressFinalize(this);
 		Environment.Exit(0);
+	}
+
+	public static async Task Register(DiscordClient cli, Bot b) {
+		await Task.Run(() => {
+			botInstances[cli] = b;
+		});
 	}
 
 	public static async Task SetInitialStatus(DiscordClient client, ReadyEventArgs args) {
