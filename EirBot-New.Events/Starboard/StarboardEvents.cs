@@ -100,7 +100,7 @@ public class StarboardEvents {
 	private static async Task<short> CountReactions(DiscordClient client, DiscordMessage message) {
 		if (message == null || message.GuildId == null)
 			return 0;
-		DiscordGuild? guild = await client.GetGuildAsync(message.GuildId.Value);
+		DiscordGuild? guild = await Util.GetGuildAsync(client, message.GuildId.Value, false);
 		if (guild == null)
 			return 0;
 		StarboardSettings? settings = GetSettings(client, guild);
@@ -133,6 +133,7 @@ public class StarboardEvents {
 			mb.WithSticker(message.Stickers[0]);
 		return mb
 			.WithEmbed(new DiscordEmbedBuilder()
+				.WithColor(await Util.GetMemberColor(client, message.Author, message.GuildId.GetValueOrDefault(0)))
 				.WithTitle("Jump to message")
 				.WithUrl(message.JumpLink)
 				.WithAuthor(message.Author.Username + " (⭐x" + reactions + ")", null, message.Author.AvatarUrl)
