@@ -29,7 +29,9 @@ public class StarboardEvents {
 
 		// Message already exists - update star count
 		if (settings.Value.messageLookup.ContainsKey(args.Message.Id)) {
-			DiscordMessage oldMessage = await starboardChannel.GetMessageAsync(settings.Value.messageLookup[args.Message.Id]);
+			DiscordMessage oldMessage = await starboardChannel.GetMessageAsync(settings.Value.messageLookup[args.Message.Id], false);
+			if (oldMessage.GuildId == null)
+				oldMessage = await starboardChannel.GetMessageAsync(settings.Value.messageLookup[args.Message.Id], true);
 			if (oldMessage == null)
 				return;
 			await args.Message.ModifyAsync(await CreateStarboardMessage(client, args.Message));
@@ -56,7 +58,9 @@ public class StarboardEvents {
 		if (!settings.Value.messageLookup.ContainsKey(args.Message.Id))
 			return;
 
-		DiscordMessage oldMessage = await starboardChannel.GetMessageAsync(settings.Value.messageLookup[args.Message.Id]);
+		DiscordMessage oldMessage = await starboardChannel.GetMessageAsync(settings.Value.messageLookup[args.Message.Id], false);
+		if (oldMessage.GuildId == null)
+			oldMessage = await starboardChannel.GetMessageAsync(settings.Value.messageLookup[args.Message.Id], true);
 		short reactions = await CountReactions(client, args.Message);
 
 		// Fell below minimum stars - remove
