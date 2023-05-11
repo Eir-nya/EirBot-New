@@ -23,7 +23,7 @@ public abstract class Saveable {
 
 		string fileName = GetFilename() + ".json";
 		try {
-			FileStream fileStream = File.OpenWrite(path + "/" + fileName);
+			FileStream fileStream = File.Create(path + "/" + fileName);
 			fileStream.Write(Encoding.UTF8.GetBytes(asJson));
 			fileStream.Close();
 		// No write permissions
