@@ -11,6 +11,8 @@ public class ServerData : Saveable {
 	public override void SetFilename(string fileName) { serverID = Convert.ToUInt64(fileName); }
 	public override string GetFilename() { return serverID.ToString(); }
 
+	public StarboardSettings starboardSettings = new StarboardSettings();
+
 	public static ServerData? GetServerData(DiscordClient client, DiscordGuild guild) {
 		Bot b = Bot.GetBot(client);
 		if (b == null)
