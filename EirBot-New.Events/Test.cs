@@ -8,7 +8,7 @@ using DisCatSharp.EventArgs;
 
 namespace EirBot_New.Events;
 [EventHandler]
-public class Test {
+public class TestCommands {
 	[Event(DiscordEvent.MessageCreated)]
 	public static async Task PingPong(DiscordClient client, MessageCreateEventArgs args) {
 		if (args.Message.Content.ToLower().StartsWith("!ping")) {
