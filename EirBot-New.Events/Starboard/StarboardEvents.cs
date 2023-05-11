@@ -18,6 +18,8 @@ public class StarboardEvents {
 	// Reaction added: add to starboard and update
 	[Event(DiscordEvent.MessageReactionAdded)]
 	public static async Task ReactionAdded(DiscordClient client, MessageReactionAddEventArgs args) {
+		if (args.Message.Author == client.CurrentUser)
+			return;
 		StarboardSettings? settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
@@ -49,6 +51,8 @@ public class StarboardEvents {
 	// Reaction removed: remove from starboard or update
 	[Event(DiscordEvent.MessageReactionRemoved)]
 	public static async Task ReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs args) {
+		if (args.Message.Author == client.CurrentUser)
+			return;
 		StarboardSettings? settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
@@ -114,16 +118,19 @@ public class StarboardEvents {
 	private static async Task<DiscordMessageBuilder> CreateStarboardMessage(DiscordClient client, DiscordMessage message) {
 		short reactions = await CountReactions(client, message);
 
-		string[] attachmentURLs = new string[message.Attachments.Count];
+		bool hasNonGuildSticker = message.Stickers.Count == 1 && message.Stickers[0].Guild.Id != message.GuildId;
+
+		string[] attachmentURLs = new string[message.Attachments.Count + (hasNonGuildSticker ? 1 : 0)];
 		for (int i = 0; i < message.Attachments.Count; i++)
 			attachmentURLs[i] = message.Attachments[i].Url;
+		if (hasNonGuildSticker)
+			attachmentURLs[attachmentURLs.Length - 1] = message.Stickers[0].Url;
 
 		DiscordMessageBuilder mb = new DiscordMessageBuilder();
 		if (attachmentURLs.Length > 0)
 			mb.WithContent(string.Join("\n", attachmentURLs));
-		if (message.Stickers.Count > 0)
-			if (message.Stickers[0].Guild.Id == message.GuildId)
-				mb.WithSticker(message.Stickers[0]);
+		if (message.Stickers.Count == 1 && !hasNonGuildSticker)
+			mb.WithSticker(message.Stickers[0]);
 		return mb
 			.WithEmbed(new DiscordEmbedBuilder()
 				.WithTitle("Jump to message")
