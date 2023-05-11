@@ -3,11 +3,13 @@ using System.Text.Json;
 
 namespace EirBot_New.Serialization;
 
+[Serializable]
 public abstract class Saveable {
+	public abstract void SetFilename(string fileName);
 	public abstract string GetFilename();
 
 	public bool Save() {
-		string asJson = JsonSerializer.Serialize(this);
+		string asJson = JsonSerializer.Serialize(this, this.GetType(), new JsonSerializerOptions() { IncludeFields = true });
 
 		string path = "data/" + this.GetType().ToString();
 		if (!Directory.Exists(path))
@@ -32,20 +34,20 @@ public abstract class Saveable {
 		return true;
 	}
 
-	public static T Load<T>(string fileName) {
-		string path = "data/" + typeof(T).ToString();
+	public static object Load(string fileName, Type t) {
+		string path = "data/" + t.ToString();
 		if (!Directory.Exists(path))
 			throw new DirectoryNotFoundException();
 
-		FileStream fileStream = File.OpenWrite(path + "/" + (fileName.EndsWith(".json") ? fileName : (fileName + ".json")));
+		FileStream fileStream = File.OpenRead(path + "/" + (fileName.EndsWith(".json") ? fileName : (fileName + ".json")));
 		StreamReader sr = new StreamReader(fileStream);
 		string asJson = sr.ReadToEnd();
 		sr.Close();
 		fileStream.Close();
 
-		object? loadedData = JsonSerializer.Deserialize(asJson, typeof(T));
+		object? loadedData = JsonSerializer.Deserialize(asJson, t, new JsonSerializerOptions() { IncludeFields = true });
 		if (loadedData != null)
-			return (T)loadedData;
-		return default(T);
+			return loadedData;
+		return null;
 	}
 }
