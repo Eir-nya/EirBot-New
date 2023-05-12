@@ -26,6 +26,8 @@ public class StarboardEvents {
 		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
 		if (starboardChannel == null)
 			return;
+		if (settings.Value.ignoredChannels.Contains(args.Channel.Id))
+			return;
 		if (await CountReactions(client, args.Message) < settings.Value.minStars)
 			return;
 
@@ -60,6 +62,8 @@ public class StarboardEvents {
 		if (starboardChannel == null)
 			return;
 		if (!settings.Value.messageLookup.ContainsKey(args.Message.Id))
+			return;
+		if (settings.Value.ignoredChannels.Contains(args.Channel.Id))
 			return;
 
 		DiscordMessage oldMessage = await starboardChannel.GetMessageAsync(settings.Value.messageLookup[args.Message.Id], false);

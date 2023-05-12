@@ -88,6 +88,25 @@ public class Connect4Events : ApplicationCommandsModule {
 		);
 	}
 
+	[SlashCommand("ignorechannel", "Ignore channels for starboard tracking.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
+	public static async Task IgnoreChannel(InteractionContext context, [Option("channel", "Channel to change ignore status of.", false), ChannelTypes(ChannelType.Text)] DiscordChannel channel, [Option("ignore", "Whether to ignore this channel in starboard operations.", false)] bool ignore = true) {
+		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
+		if (serverData == null)
+			return;
+		if (ignore) {
+			if (!serverData.starboardSettings.ignoredChannels.Contains(channel.Id))
+				serverData.starboardSettings.ignoredChannels.Add(channel.Id);
+		} else
+			if (serverData.starboardSettings.ignoredChannels.Contains(channel.Id))
+				serverData.starboardSettings.ignoredChannels.Remove(channel.Id);
+		serverData.Save();
+
+		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
+			.AsEphemeral()
+			.WithContent("Channel " + channel.Mention + " is now **" + (ignore ? "ignored" : "not ignored") + "** for starboard.")
+		);
+	}
+
 	[SlashCommand("disable", "Disables starboard.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
 	public static async Task Disable(InteractionContext context) {
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);

@@ -9,6 +9,7 @@ public struct StarboardSettings {
 
 	public ulong channelID = 0;
 	public Dictionary<ulong, ulong> messageLookup = new Dictionary<ulong, ulong>();
+	public List<ulong> ignoredChannels = new List<ulong>();
 
 	public StarboardSettings() {
 		minStars = 2;
