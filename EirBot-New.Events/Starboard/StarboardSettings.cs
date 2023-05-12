@@ -1,3 +1,5 @@
+using DisCatSharp.Entities;
+
 namespace EirBot_New.Events.Starboard;
 
 [Serializable]
@@ -6,6 +8,7 @@ public struct StarboardSettings {
 	public bool allowNSFW;
 	public bool allowSelfStar;
 	public bool removeWhenUnstarred;
+	public bool useWebhook;
 
 	public ulong channelID = 0;
 	public Dictionary<ulong, ulong> messageLookup = new Dictionary<ulong, ulong>();
@@ -16,5 +19,6 @@ public struct StarboardSettings {
 		allowNSFW = false;
 		allowSelfStar = false;
 		removeWhenUnstarred = true;
+		useWebhook = true;
 	}
 }

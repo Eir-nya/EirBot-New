@@ -66,6 +66,20 @@ public class Connect4Events : ApplicationCommandsModule {
 		);
 	}
 
+	[SlashCommand("useWebhook", "Use a webhook when posting to starboard (requires \"Manage Webhooks\" perm)", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageWebhooks)]
+	public static async Task UseWebhook(InteractionContext context, [Option("use-webhook", "Whether a webhook should be used when posting to the starboard", false)] bool useWebhook) {
+		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
+		if (serverData == null)
+			return;
+		serverData.starboardSettings.useWebhook = useWebhook;
+		serverData.Save();
+
+		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
+			.AsEphemeral()
+			.WithContent("Starboard **" + (useWebhook ? "will" : "will not") + "** use a webhook when posting.")
+		);
+	}
+
 	[SlashCommand("channel", "Set starboard channel.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
 	public static async Task Channel(InteractionContext context, [Option("channel", "Channel to post starboard messages in.", false), ChannelTypes(ChannelType.Text)] DiscordChannel channel) {
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
@@ -81,6 +95,11 @@ public class Connect4Events : ApplicationCommandsModule {
 		}
 		serverData.starboardSettings.channelID = channel.Id;
 		serverData.Save();
+
+		// Set webhook channel to new channel if possible
+		DiscordWebhook? hook = await StarboardEvents.GetWebhook(context.Client, channel);
+		if (hook != null)
+			await hook.ModifyAsync(channelId: channel.Id);
 
 		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 			.AsEphemeral()

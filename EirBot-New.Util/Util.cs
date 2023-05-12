@@ -3,6 +3,16 @@ using DisCatSharp.Entities;
 
 namespace EirBot_New;
 public static class Util {
+	public static async Task<DiscordMessage> VerifyMessage(DiscordMessage message, DiscordChannel channel) {
+		if (message.Author != null)
+			return message;
+		return await channel.GetMessageAsync(message.Id, true);
+	}
+
+	public static async Task<DiscordMessage> GetMessageFixed(ulong id, DiscordChannel channel) {
+		return await VerifyMessage(await channel.GetMessageAsync(id, false), channel);
+	}
+
 	public static async Task<DiscordGuild?> GetGuildAsync(DiscordClient client, ulong id, bool includeCount = false) {
 		DiscordGuild? guild = await client.GetGuildAsync(id, includeCount, false);
 		if (guild == null)
