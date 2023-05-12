@@ -137,7 +137,7 @@ public class StarboardEvents {
 			mb.WithSticker(message.Stickers[0]);
 		return mb
 			.WithEmbed(new DiscordEmbedBuilder()
-				.WithColor(await Util.GetMemberColor(client, message.Author, message.GuildId.GetValueOrDefault(0)))
+				.WithColor(await Util.GetMemberColor(message.Author, message.Channel.Guild))
 				.WithTitle("Jump to message")
 				.WithUrl(message.JumpLink)
 				.WithAuthor(message.Author.Username + " (⭐x" + reactions + ")", null, message.Author.AvatarUrl)

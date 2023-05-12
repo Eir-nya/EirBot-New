@@ -23,7 +23,7 @@ public class Connect4Events : ApplicationCommandsModule {
 
 		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 			.AddEmbed(new DiscordEmbedBuilder()
-				.WithColor(await Util.GetMemberColor(context.Client, context.User, context.Guild.Id))
+				.WithColor(await Util.GetMemberColor(context.User, context.Guild))
 				.WithAuthor(context.User.Username, null, context.User.AvatarUrl)
 				.WithDescription(String.Format("{0}, {1} has challenged you to a Connect Four match!\nDo you accept?", opponent.Mention, context.User.Username))
 			)

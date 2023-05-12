@@ -14,12 +14,22 @@ public static class Util {
 
 	public static async Task<DiscordColor> GetMemberColor(DiscordClient client, DiscordUser user, ulong guildID) {
 		DiscordGuild? guild = await GetGuildAsync(client, guildID);
+		if (guild != null)
+			return await GetMemberColor(user, guild);
+		return DiscordColor.None;
+	}
+	public static async Task<DiscordColor> GetMemberColor(DiscordUser user, DiscordGuild guild) {
 		if (guild != null) {
-			DiscordMember member = await guild.GetMemberAsync(user.Id, false);
-			if (member == null)
-				member = await guild.GetMemberAsync(user.Id, true);
-			if (member != null)
-				return member.Color;
+			try {
+				DiscordMember member = await guild.GetMemberAsync(user.Id, false);
+				if (member == null)
+					member = await guild.GetMemberAsync(user.Id, true);
+				if (member != null)
+					return member.Color;
+			// Member not found
+			} catch (DisCatSharp.Exceptions.NotFoundException e) {
+				return DiscordColor.None;
+			}
 		}
 		return DiscordColor.None;
 	}
