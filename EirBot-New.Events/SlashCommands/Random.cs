@@ -86,7 +86,7 @@ public class RandomCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("Fate", "Roll Fate RPG dice (4).", true, false)]
-	public static async Task Fate(InteractionContext context, [Option("modifier", "Modifier to add to roll result."), MinimumValue(-4), MaximumValue(4)] int modifier = 0) {
+	public static async Task Fate(InteractionContext context, [Option("modifier", "Modifier to add to roll result."), MinimumValue(-20), MaximumValue(20)] int modifier = 0) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 		string result = "Fate :game_die: **__";
 
@@ -104,7 +104,11 @@ public class RandomCommands : ApplicationCommandsModule {
 		}
 		total += modifier;
 
-		result += "__ " + (modifier >= 0 ? "+" : "") + modifier + " = " + (total >= 0 ? "+" : "") + total + " (" + (FateLadder)Math.Clamp(total, -4, 8) + ")**";
-		await PostResult(context, result);
+		string rank = string.Empty;
+		if (total >= -4 && total <= 8)
+			rank = " (" + (FateLadder)total + ")";
+
+		result += "__** " + (modifier >= 0 ? "+" : "") + modifier + " = **" + (total >= 0 ? "+" : "") + total + rank + "**";
+		await RandomMethods.PostResult(context, result);
 	}
 }
