@@ -74,6 +74,22 @@ public class Connect4Events : ApplicationCommandsModule {
 		);
 	}
 
+	[SlashCommand("removeWhenDeleted", "Remove messages from the starboard when the original messages are deleted.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
+	public static async Task RemoveWhenDeleted(InteractionContext context, [Option("remove-when-deleted", "Whether starboard messages should be removed when original message is deleted.", false)] bool removeWhenDeleted) {
+		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
+		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
+		if (serverData == null) {
+			await context.DeleteResponseAsync();
+			return;
+		}
+		serverData.starboardSettings.removeWhenDeleted = removeWhenDeleted;
+		serverData.Save();
+
+		await context.EditResponseAsync(new DiscordWebhookBuilder()
+			.WithContent("Starboard **" + (removeWhenDeleted ? "will" : "will not") + "** remove messages after original messages are deleted.")
+		);
+	}
+
 	[SlashCommand("useWebhook", "Use a webhook when posting to starboard (requires \"Manage Webhooks\" perm)", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageWebhooks)]
 	public static async Task UseWebhook(InteractionContext context, [Option("use-webhook", "Whether a webhook should be used when posting to the starboard", false)] bool useWebhook) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());

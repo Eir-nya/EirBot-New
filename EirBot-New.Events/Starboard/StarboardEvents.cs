@@ -26,6 +26,8 @@ public class StarboardEvents {
 	public static async Task ReactionAdded(DiscordClient client, MessageReactionAddEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
+		if (args.Emoji != starEmoji)
+			return;
 		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
 		if (args.Message.Author == client.CurrentUser)
 			return;
@@ -47,38 +49,22 @@ public class StarboardEvents {
 
 		// Message already exists, but its webhook status is not what we want, so delete it
 		if (settings.Value.messageLookup.ContainsKey(message.Id)) {
-			DiscordMessage oldMessage;
-			// Webhook
-			if (hook != null)
-				oldMessage = await hook.GetMessageAsync(settings.Value.messageLookup[message.Id]);
-			// No webhook
-			else
-				oldMessage = await Util.GetMessageFixed(settings.Value.messageLookup[message.Id], starboardChannel);
-			if (oldMessage != null)
-				if (oldMessage.WebhookMessage != settings.Value.useWebhook && await CheckWebhookPerms(client, starboardChannel)) {
+			// Get starboard message, if it already exists
+			DiscordMessage? starboardMessage = await GetStarboardMessage(message.Id, settings.Value, starboardChannel, hook);
+			if (starboardMessage != null)
+				if (starboardMessage.WebhookMessage != settings.Value.useWebhook && await CheckWebhookPerms(client, starboardChannel)) {
 					settings.Value.messageLookup.Remove(message.Id);
-					try { await oldMessage.DeleteAsync(); } catch {}
+					try { await starboardMessage.DeleteAsync(); } catch {}
 				}
 		}
 
 		// Message already exists - update star count
 		if (settings.Value.messageLookup.ContainsKey(message.Id)) {
-			DiscordMessage oldMessage;
-			// Webhook
-			if (hook != null)
-				oldMessage = await hook.GetMessageAsync(settings.Value.messageLookup[message.Id]);
-			// No webhook
-			else
-				oldMessage = await Util.GetMessageFixed(settings.Value.messageLookup[message.Id], starboardChannel);
-			if (oldMessage == null)
+			// Get starboard message, if it already exists
+			DiscordMessage? starboardMessage = await GetStarboardMessage(message.Id, settings.Value, starboardChannel, hook);
+			if (starboardMessage == null)
 				return;
-
-			// Webhook
-			if (hook != null)
-				await hook.EditMessageAsync(settings.Value.messageLookup[message.Id], await CreateStarboardMessageWebhook(client, message, false));
-			// No webhook
-			else
-				await message.ModifyAsync(await CreateStarboardMessage(client, message, false));
+			await UpdateStarboardMessage(client, message, starboardMessage, hook);
 		// Message doesn't exist - create it
 		} else {
 			DiscordMessage newMessage;
@@ -100,6 +86,8 @@ public class StarboardEvents {
 	public static async Task ReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
+		if (args.Emoji != starEmoji)
+			return;
 		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
 		if (message.Author == client.CurrentUser)
 			return;
@@ -119,39 +107,113 @@ public class StarboardEvents {
 		if (settings.Value.useWebhook)
 			hook = await GetWebhook(client, starboardChannel);
 
-		DiscordMessage oldMessage;
-		// Webhook
-		if (hook != null)
-			oldMessage = await hook.GetMessageAsync(settings.Value.messageLookup[message.Id]);
-		// No webhook
-		else
-			oldMessage = await Util.GetMessageFixed(settings.Value.messageLookup[message.Id], starboardChannel);
-		if (oldMessage == null || (oldMessage.WebhookMessage && (!settings.Value.useWebhook || !await CheckWebhookPerms(client, starboardChannel))))
+		// Get starboard message, if it already exists
+		DiscordMessage? starboardMessage = await GetStarboardMessage(message.Id, settings.Value, starboardChannel, hook);
+		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await CheckWebhookPerms(client, starboardChannel))))
 			return;
 
 		short reactions = await CountReactions(client, message, args.Channel);
 
 		// Fell below minimum stars - remove
 		if (reactions < settings.Value.minStars && settings.Value.removeWhenUnstarred) {
-			if (hook != null)
-				await hook.DeleteMessageAsync(oldMessage.Id);
-			else
-				await oldMessage.DeleteAsync();
-			settings.Value.messageLookup.Remove(message.Id);
-			ServerData? serverData = ServerData.GetServerData(client, args.Guild);
-			if (serverData == null)
-				return;
-			serverData.Save();
+			await DeleteStarboardMessage(client, starboardMessage, message.Id, settings.Value, args.Guild, hook);
 			return;
 		}
 
 		// Update star count
+		await UpdateStarboardMessage(client, message, starboardMessage, hook);
+	}
+
+	[Event(DiscordEvent.MessageUpdated)]
+	public static async Task MessageUpdated(DiscordClient client, MessageUpdateEventArgs args) {
+		if (args.Channel.IsPrivate)
+			return;
+		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
+		if (message.Author == client.CurrentUser)
+			return;
+		StarboardSettings? settings = GetSettings(client, args.Guild);
+		if (settings == null)
+			return;
+		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
+		if (starboardChannel == null)
+			return;
+		if (!settings.Value.messageLookup.ContainsKey(message.Id))
+			return;
+		if (settings.Value.ignoredChannels.Contains(args.Channel.Id))
+			return;
+
+		// Get webhook if possible
+		DiscordWebhook? hook = null;
+		if (settings.Value.useWebhook)
+			hook = await GetWebhook(client, starboardChannel);
+
+		// Get starboard message, if it already exists
+		DiscordMessage? starboardMessage = await GetStarboardMessage(message.Id, settings.Value, starboardChannel, hook);
+		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await CheckWebhookPerms(client, starboardChannel))))
+			return;
+
+		// Update message
+		await UpdateStarboardMessage(client, message, starboardMessage, hook);
+	}
+
+	[Event(DiscordEvent.MessageDeleted)]
+	public static async Task MessageRemoved(DiscordClient client, MessageDeleteEventArgs args) {
+		if (args.Channel.IsPrivate)
+			return;
+		StarboardSettings? settings = GetSettings(client, args.Guild);
+		if (settings == null)
+			return;
+		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
+		if (starboardChannel == null)
+			return;
+		if (!settings.Value.messageLookup.ContainsKey(args.Message.Id))
+			return;
+
+		// Get webhook if possible
+		DiscordWebhook? hook = null;
+		if (settings.Value.useWebhook)
+			hook = await GetWebhook(client, starboardChannel);
+
+		DiscordMessage? starboardMessage = await GetStarboardMessage(args.Message.Id, settings.Value, starboardChannel, hook);
+		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await CheckWebhookPerms(client, starboardChannel))))
+			return;
+
+		// Remove
+		if (settings.Value.removeWhenDeleted)
+			await DeleteStarboardMessage(client, starboardMessage, args.Message.Id, settings.Value, args.Guild, hook);
+	}
+
+
+	private static async Task UpdateStarboardMessage(DiscordClient client, DiscordMessage starredMessage, DiscordMessage starboardMessage, DiscordWebhook? hook) {
 		// Webhook
 		if (hook != null)
-			await hook.EditMessageAsync(settings.Value.messageLookup[message.Id], await CreateStarboardMessageWebhook(client, message, false));
+			await hook.EditMessageAsync(starboardMessage.Id, await CreateStarboardMessageWebhook(client, starredMessage, false));
 		// No webhook
 		else
-			await message.ModifyAsync(await CreateStarboardMessage(client, message, false));
+			await starboardMessage.ModifyAsync(await CreateStarboardMessage(client, starredMessage, false));
+	}
+
+	private static async Task DeleteStarboardMessage(DiscordClient client, DiscordMessage starboardMessage, ulong starredMessageID, StarboardSettings settings, DiscordGuild guild, DiscordWebhook? hook) {
+		if (hook != null)
+			await hook.DeleteMessageAsync(starboardMessage.Id);
+		else
+			await starboardMessage.DeleteAsync();
+		settings.messageLookup.Remove(starredMessageID);
+		ServerData? serverData = ServerData.GetServerData(client, guild);
+		if (serverData == null)
+			return;
+		serverData.Save();
+	}
+
+	private static async Task<DiscordMessage?> GetStarboardMessage(ulong starredMessageID, StarboardSettings settings, DiscordChannel starboardChannel, DiscordWebhook? hook) {
+		DiscordMessage? starboardMessage;
+		// Webhook
+		if (hook != null)
+			starboardMessage = await hook.GetMessageAsync(settings.messageLookup[starredMessageID]);
+		// No webhook
+		else
+			starboardMessage = await Util.GetMessageFixed(settings.messageLookup[starredMessageID], starboardChannel);
+		return starboardMessage;
 	}
 
 

@@ -7,6 +7,7 @@ public struct StarboardSettings {
 	public short minStars;
 	public bool allowNSFW;
 	public bool allowSelfStar;
+	public bool removeWhenDeleted;
 	public bool removeWhenUnstarred;
 	public bool useWebhook;
 
@@ -18,6 +19,7 @@ public struct StarboardSettings {
 		minStars = 2;
 		allowNSFW = false;
 		allowSelfStar = false;
+		removeWhenDeleted = true;
 		removeWhenUnstarred = true;
 		useWebhook = true;
 	}
