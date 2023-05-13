@@ -10,6 +10,39 @@ using EirBot_New.Serialization;
 namespace EirBot_New.Events.Starboard;
 [SlashCommandGroup("Starboard", "Starboard settings.", false, false), EventHandler, GuildOnlyApplicationCommands]
 public class Connect4Events : ApplicationCommandsModule {
+	[SlashCommand("List", "Lists all config.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
+	public static async Task List(InteractionContext context) {
+		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
+		StarboardSettings? settings = StarboardEvents.GetSettings(context.Client, context.Guild);
+		if (settings == null) {
+			await context.DeleteResponseAsync();
+			return;
+		}
+
+		DiscordChannel starboardChannel = context.Guild.GetChannel(settings.Value.channelID);
+		List<string> ignoredChannelNames = new List<string>();
+		foreach (ulong id in settings.Value.ignoredChannels)
+			ignoredChannelNames.Add(context.Guild.GetChannel(id).Name);
+
+		await context.EditResponseAsync(new DiscordWebhookBuilder()
+			.AddEmbed(new DiscordEmbedBuilder()
+				.WithTitle("Starboard settings")
+				.WithAuthor(context.Guild.Name, null, context.Guild.IconUrl)
+				.WithDescription(
+					":gear: Enabled: " + (!string.IsNullOrEmpty(starboardChannel.Name) ? ":white_check_mark:" : ":x:") + "\n" +
+					":hash: Starboard channel: " + (starboardChannel != null ? starboardChannel.Mention : ":x:") + "\n" +
+					":no_bell: Ignored channels: " + (settings.Value.ignoredChannels.Count > 0 ? string.Join(", ", ignoredChannelNames) : ":x:") + "\n" +
+					":star: Minimum stars: " + settings.Value.minStars + "\n" +
+					":underage: Allow posts from NSFW channels: " + (settings.Value.allowNSFW ? ":white_check_mark:" : ":x:") + "\n" +
+					":index_pointing_at_the_viewer: Count stars from message author: " + (settings.Value.allowSelfStar ? ":white_check_mark:" : ":x:") + "\n" +
+					":hammer: Remove on message delete: " + (!settings.Value.removeWhenDeleted ? ":white_check_mark:" : ":x:") + "\n" +
+					":dizzy: Remove when star count falls below minimum stars: " + (settings.Value.removeWhenUnstarred ? ":white_check_mark:" : ":x:") + "\n" +
+					":robot: Use webhook for starboard messages: " + (settings.Value.useWebhook ? ":white_check_mark:" : ":x:")
+				)
+			)
+		);
+	}
+
 	[SlashCommand("minStars", "Set minimum stars for adding to starboard.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
 	public static async Task MinStars(InteractionContext context, [Option("minimum-stars", "Minimum star amount to add a message to starboard.", false), MinimumValue(1), MaximumValue(25)] int minStars) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());

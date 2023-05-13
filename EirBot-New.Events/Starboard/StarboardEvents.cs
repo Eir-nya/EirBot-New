@@ -247,7 +247,7 @@ public class StarboardEvents {
 		return channel.PermissionsFor(botMember).HasFlag(Permissions.ManageWebhooks);
 	}
 
-	private static StarboardSettings? GetSettings(DiscordClient client, DiscordGuild guild) {
+	public static StarboardSettings? GetSettings(DiscordClient client, DiscordGuild guild) {
 		ServerData? serverData = ServerData.GetServerData(client, guild);
 		if (serverData == null)
 			return null;
