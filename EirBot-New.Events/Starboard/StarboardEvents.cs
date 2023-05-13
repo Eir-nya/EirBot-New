@@ -34,6 +34,8 @@ public class StarboardEvents {
 		StarboardSettings? settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
+		if (args.Channel.IsNsfw && !settings.Value.allowNSFW)
+			return;
 		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
 		if (starboardChannel == null)
 			return;
@@ -94,6 +96,8 @@ public class StarboardEvents {
 		StarboardSettings? settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
+		if (args.Channel.IsNsfw && !settings.Value.allowNSFW)
+			return;
 		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
 		if (starboardChannel == null)
 			return;
@@ -134,6 +138,8 @@ public class StarboardEvents {
 		StarboardSettings? settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
+		if (args.Channel.IsNsfw && !settings.Value.allowNSFW)
+			return;
 		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
 		if (starboardChannel == null)
 			return;
@@ -162,6 +168,8 @@ public class StarboardEvents {
 			return;
 		StarboardSettings? settings = GetSettings(client, args.Guild);
 		if (settings == null)
+			return;
+		if (args.Channel.IsNsfw && !settings.Value.allowNSFW)
 			return;
 		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
 		if (starboardChannel == null)
