@@ -35,7 +35,7 @@ public class Connect4Events : ApplicationCommandsModule {
 					":star: Minimum stars: " + settings.Value.minStars + "\n" +
 					":underage: Allow posts from NSFW channels: " + (settings.Value.allowNSFW ? ":white_check_mark:" : ":x:") + "\n" +
 					":index_pointing_at_the_viewer: Count stars from message author: " + (settings.Value.allowSelfStar ? ":white_check_mark:" : ":x:") + "\n" +
-					":hammer: Remove on message delete: " + (!settings.Value.removeWhenDeleted ? ":white_check_mark:" : ":x:") + "\n" +
+					":hammer: Remove on message delete: " + (settings.Value.removeWhenDeleted ? ":white_check_mark:" : ":x:") + "\n" +
 					":dizzy: Remove when star count falls below minimum stars: " + (settings.Value.removeWhenUnstarred ? ":white_check_mark:" : ":x:") + "\n" +
 					":robot: Use webhook for starboard messages: " + (settings.Value.useWebhook ? ":white_check_mark:" : ":x:")
 				)
