@@ -52,30 +52,47 @@ public class StarboardEvents {
 		// Message already exists, but its webhook status is not what we want, so delete it
 		if (settings.Value.messageLookup.ContainsKey(message.Id)) {
 			// Get starboard message, if it already exists
-			DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook);
+			DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
+			DiscordMessage? starboardJumpMessage = null;
+			if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
+				starboardJumpMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, true);
 			if (starboardMessage != null)
-				if (starboardMessage.WebhookMessage != settings.Value.useWebhook && await CheckWebhookPerms(client, starboardChannel)) {
+				if (starboardMessage.WebhookMessage != (settings.Value.useWebhook && await CheckWebhookPerms(client, starboardChannel))) {
 					settings.Value.messageLookup.Remove(message.Id);
 					try { await starboardMessage.DeleteAsync(); } catch {}
+				}
+			if (starboardJumpMessage != null)
+				if (!settings.Value.useWebhook) {
+					settings.Value.webhookJumpMessageLookup.Remove(message.Id);
+					try { await starboardJumpMessage.DeleteAsync(); } catch {}
 				}
 		}
 
 		// Message already exists - update star count
 		if (settings.Value.messageLookup.ContainsKey(message.Id)) {
 			// Get starboard message, if it already exists
-			DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook);
+			DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
+			DiscordMessage? starboardJumpMessage = null;
+			if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
+				starboardJumpMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, true);
 			if (starboardMessage == null)
 				return;
-			await UpdateStarboardMessage(client, message, starboardMessage, hook);
+			if (settings.Value.useWebhook && hook != null)
+				await UpdateStarboardJumpMessage(client, message, starboardJumpMessage, hook);
+			else
+				await UpdateStarboardMessage(client, message, starboardMessage, hook);
 		// Message doesn't exist - create it
 		} else {
-			DiscordMessage newMessage;
-			if (hook != null)
-				newMessage = await hook.ExecuteAsync(await CreateStarboardMessageWebhook(client, message, true));
-			else
+			DiscordMessage newMessage, webhookJumpMessage = null;
+			if (hook != null) {
+				newMessage = await hook.ExecuteAsync(await CreateStarboardMessageWebhook(message, true));
+				webhookJumpMessage = await hook.ExecuteAsync(await CreateStarboardJumpMessage(client, message, true));
+			} else
 				newMessage = await starboardChannel.SendMessageAsync(await CreateStarboardMessage(client, message, true));
 
 			settings.Value.messageLookup[message.Id] = newMessage.Id;
+			if (webhookJumpMessage != null)
+				settings.Value.webhookJumpMessageLookup[message.Id] = webhookJumpMessage.Id;
 			ServerData? serverData = ServerData.GetServerData(client, args.Guild);
 			if (serverData == null)
 				return;
@@ -112,20 +129,26 @@ public class StarboardEvents {
 			hook = await GetWebhook(client, starboardChannel);
 
 		// Get starboard message, if it already exists
-		DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook);
+		DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
 		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await CheckWebhookPerms(client, starboardChannel))))
 			return;
+		DiscordMessage? starboardJumpMessage = null;
+		if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
+			starboardJumpMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, true);
 
 		short reactions = await CountReactions(client, message, args.Channel);
 
 		// Fell below minimum stars - remove
 		if (reactions < settings.Value.minStars && settings.Value.removeWhenUnstarred) {
-			await DeleteStarboardMessage(client, starboardMessage, message.Id, settings.Value, args.Guild, hook);
+			await DeleteStarboardMessage(client, starboardMessage, starboardJumpMessage, message.Id, settings.Value, args.Guild, hook);
 			return;
 		}
 
 		// Update star count
-		await UpdateStarboardMessage(client, message, starboardMessage, hook);
+		if (settings.Value.useWebhook && hook != null)
+			await UpdateStarboardJumpMessage(client, message, starboardJumpMessage, hook);
+		else
+			await UpdateStarboardMessage(client, message, starboardMessage, hook);
 	}
 
 	[Event(DiscordEvent.MessageUpdated)]
@@ -154,9 +177,12 @@ public class StarboardEvents {
 			hook = await GetWebhook(client, starboardChannel);
 
 		// Get starboard message, if it already exists
-		DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook);
+		DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
 		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await CheckWebhookPerms(client, starboardChannel))))
 			return;
+		DiscordMessage? starboardJumpMessage = null;
+		if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
+			starboardJumpMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, true);
 
 		// Update message
 		await UpdateStarboardMessage(client, message, starboardMessage, hook);
@@ -182,29 +208,37 @@ public class StarboardEvents {
 		if (settings.Value.useWebhook)
 			hook = await GetWebhook(client, starboardChannel);
 
-		DiscordMessage? starboardMessage = await GetStarboardMessage(client, args.Message.Id, settings.Value, starboardChannel, hook);
+		DiscordMessage? starboardMessage = await GetStarboardMessage(client, args.Message.Id, settings.Value, starboardChannel, hook, false);
 		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await CheckWebhookPerms(client, starboardChannel))))
 			return;
+		DiscordMessage? starboardJumpMessage = null;
+		if (settings.Value.webhookJumpMessageLookup.ContainsKey(args.Message.Id))
+			starboardJumpMessage = await GetStarboardMessage(client, args.Message.Id, settings.Value, starboardChannel, hook, true);
 
 		// Remove
 		if (settings.Value.removeWhenDeleted)
-			await DeleteStarboardMessage(client, starboardMessage, args.Message.Id, settings.Value, args.Guild, hook);
+			await DeleteStarboardMessage(client, starboardMessage, starboardJumpMessage, args.Message.Id, settings.Value, args.Guild, hook);
 	}
 
 
 	private static async Task UpdateStarboardMessage(DiscordClient client, DiscordMessage starredMessage, DiscordMessage starboardMessage, DiscordWebhook? hook) {
 		// Webhook
 		if (hook != null)
-			await hook.EditMessageAsync(starboardMessage.Id, await CreateStarboardMessageWebhook(client, starredMessage, false));
+			await hook.EditMessageAsync(starboardMessage.Id, await CreateStarboardMessageWebhook(starredMessage, false));
 		// No webhook
 		else
 			await starboardMessage.ModifyAsync(await CreateStarboardMessage(client, starredMessage, false));
 	}
 
-	private static async Task DeleteStarboardMessage(DiscordClient client, DiscordMessage starboardMessage, ulong starredMessageID, StarboardSettings settings, DiscordGuild guild, DiscordWebhook? hook) {
-		if (hook != null)
+	private static async Task UpdateStarboardJumpMessage(DiscordClient client, DiscordMessage starredMessage, DiscordMessage starboardJumpMessage, DiscordWebhook hook) {
+		await hook.EditMessageAsync(starboardJumpMessage.Id, await CreateStarboardJumpMessage(client, starredMessage, false));
+	}
+
+	private static async Task DeleteStarboardMessage(DiscordClient client, DiscordMessage starboardMessage, DiscordMessage starboardJumpMessage, ulong starredMessageID, StarboardSettings settings, DiscordGuild guild, DiscordWebhook? hook) {
+		if (hook != null) {
 			await hook.DeleteMessageAsync(starboardMessage.Id);
-		else
+			await hook.DeleteMessageAsync(starboardJumpMessage.Id);
+		} else
 			await starboardMessage.DeleteAsync();
 		settings.messageLookup.Remove(starredMessageID);
 		ServerData? serverData = ServerData.GetServerData(client, guild);
@@ -213,18 +247,22 @@ public class StarboardEvents {
 		serverData.Save();
 	}
 
-	private static async Task<DiscordMessage?> GetStarboardMessage(DiscordClient client, ulong starredMessageID, StarboardSettings settings, DiscordChannel starboardChannel, DiscordWebhook? hook) {
-		DiscordMessage? starboardMessage;
+	private static async Task<DiscordMessage?> GetStarboardMessage(DiscordClient client, ulong starredMessageID, StarboardSettings settings, DiscordChannel starboardChannel, DiscordWebhook? hook, bool jumpMessage) {
+		DiscordMessage? starboardMessage = null;
 		// Webhook
 		if (hook != null)
-			starboardMessage = await hook.GetMessageAsync(settings.messageLookup[starredMessageID]);
+			try {
+				starboardMessage = await hook.GetMessageAsync((jumpMessage ? settings.webhookJumpMessageLookup : settings.messageLookup)[starredMessageID]);
+			} catch {}
 		// No webhook
 		else
-			starboardMessage = await Util.GetMessageFixed(settings.messageLookup[starredMessageID], starboardChannel);
+			try {
+				starboardMessage = await Util.GetMessageFixed((jumpMessage ? settings.webhookJumpMessageLookup : settings.messageLookup)[starredMessageID], starboardChannel);
+			} catch {}
 		if (starboardMessage != null)
 			return starboardMessage;
 		// Remove missing starboard message from message lookup
-		settings.messageLookup.Remove(starredMessageID);
+		(jumpMessage ? settings.webhookJumpMessageLookup : settings.messageLookup).Remove(starredMessageID);
 		ServerData? serverData = ServerData.GetServerData(client, starboardChannel.Guild);
 		if (serverData == null)
 			return null;
@@ -349,9 +387,7 @@ public class StarboardEvents {
 			);
 	}
 
-	private static async Task<DiscordWebhookBuilder> CreateStarboardMessageWebhook(DiscordClient client, DiscordMessage message, bool newMessage) {
-		short reactions = await CountReactions(client, message, message.Channel);
-
+	private static async Task<DiscordWebhookBuilder> CreateStarboardMessageWebhook(DiscordMessage message, bool newMessage) {
 		bool hasStickerAndFiles = message.Stickers.Count == 1 && message.Attachments.Count > 0;
 
 		(string, Dictionary<string, Stream>) attachmentData = await HandleAttachments(message, newMessage, true);
@@ -371,6 +407,17 @@ public class StarboardEvents {
 				wb.AddFiles(newAttachments);
 		if (message.Stickers.Count == 1 && !hasStickerAndFiles)
 			wb.AddFile(message.Stickers[0].Name, await new HttpClient().GetStreamAsync(message.Stickers[0].Url), false, message.Stickers[0].Description);
+		if (newMessage) {
+			wb.Username = message.Author.Username;
+			wb.AvatarUrl = message.Author.AvatarUrl;
+		}
+		return wb;
+	}
+
+	private static async Task<DiscordWebhookBuilder> CreateStarboardJumpMessage(DiscordClient client, DiscordMessage message, bool newMessage) {
+		short reactions = await CountReactions(client, message, message.Channel);
+
+		DiscordWebhookBuilder wb = new DiscordWebhookBuilder();
 		if (newMessage) {
 			wb.Username = message.Author.Username;
 			wb.AvatarUrl = message.Author.AvatarUrl;
