@@ -29,7 +29,7 @@ public class Connect4Events : ApplicationCommandsModule {
 				.WithTitle("Starboard settings")
 				.WithAuthor(context.Guild.Name, null, context.Guild.IconUrl)
 				.WithDescription(
-					":gear: Enabled: " + (!string.IsNullOrEmpty(starboardChannel.Name) ? ":white_check_mark:" : ":x:") + "\n" +
+					":gear: Enabled: " + ((starboardChannel != null && !string.IsNullOrEmpty(starboardChannel.Name)) ? ":white_check_mark:" : ":x:") + "\n" +
 					":hash: Starboard channel: " + (starboardChannel != null ? starboardChannel.Mention : ":x:") + "\n" +
 					":no_bell: Ignored channels: " + (settings.Value.ignoredChannels.Count > 0 ? string.Join(", ", ignoredChannelNames) : ":x:") + "\n" +
 					":star: Minimum stars: " + settings.Value.minStars + "\n" +
