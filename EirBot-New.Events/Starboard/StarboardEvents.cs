@@ -370,7 +370,8 @@ public class StarboardEvents {
 		}
 
 		DiscordMessageBuilder mb = new DiscordMessageBuilder()
-			.WithContent(attachmentString);
+			.WithContent(attachmentString)
+			.KeepAttachments(true);
 		if (newMessage)
 			if (newAttachments.Count > 0)
 				mb.WithFiles(newAttachments);
@@ -401,7 +402,8 @@ public class StarboardEvents {
 		}
 
 		DiscordWebhookBuilder wb = new DiscordWebhookBuilder()
-			.WithContent(attachmentString);
+			.WithContent(attachmentString)
+			.KeepAttachments(true);
 		if (newMessage)
 			if (newAttachments.Count > 0)
 				wb.AddFiles(newAttachments);
