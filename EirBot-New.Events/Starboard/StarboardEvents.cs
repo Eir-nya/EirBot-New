@@ -29,8 +29,8 @@ public class StarboardEvents {
 		if (args.Emoji != starEmoji)
 			return;
 		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
-		if (args.Message.Author == client.CurrentUser)
-			return;
+		// if (args.Message.Author == client.CurrentUser)
+		// 	return;
 		StarboardSettings? settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
@@ -108,8 +108,8 @@ public class StarboardEvents {
 		if (args.Emoji != starEmoji)
 			return;
 		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
-		if (message.Author == client.CurrentUser)
-			return;
+		// if (message.Author == client.CurrentUser)
+		// 	return;
 		StarboardSettings? settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
