@@ -6,6 +6,7 @@ using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using EirBot_New.Attributes;
 using EirBot_New.Serialization;
+using System.Net;
 
 namespace EirBot_New.Events.Starboard;
 [SlashCommandGroup("Starboard", "Starboard settings.", false, false), EventHandler, GuildOnlyApplicationCommands]
@@ -160,7 +161,7 @@ public class Connect4Events : ApplicationCommandsModule {
 		// Set webhook channel to new channel if possible
 		DiscordWebhook? hook = await StarboardEvents.GetWebhook(context.Client, channel);
 		if (hook != null)
-			await hook.ModifyAsync(channelId: channel.Id);
+			await hook.ModifyAsync(hook.Name, new MemoryStream(new WebClient().DownloadData(new Uri(context.Client.CurrentUser.AvatarUrl))), channel.Id);
 
 		await context.EditResponseAsync(new DiscordWebhookBuilder()
 			.WithContent("Starboard channel set to " + channel.Mention + ".")
