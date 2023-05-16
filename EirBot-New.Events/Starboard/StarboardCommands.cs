@@ -19,7 +19,7 @@ public class Connect4Events : ApplicationCommandsModule {
 			return;
 		}
 
-		DiscordChannel starboardChannel = context.Guild.GetChannel(settings.Value.channelID);
+		DiscordChannel? starboardChannel = context.Guild.GetChannel(settings.Value.channelID);
 		List<string> ignoredChannelNames = new List<string>();
 		foreach (ulong id in settings.Value.ignoredChannels)
 			ignoredChannelNames.Add(context.Guild.GetChannel(id).Name);

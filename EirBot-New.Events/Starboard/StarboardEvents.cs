@@ -403,6 +403,7 @@ public class StarboardEvents {
 
 		DiscordWebhookBuilder wb = new DiscordWebhookBuilder()
 			.WithContent(attachmentString)
+			.AddEmbeds(message.Embeds)
 			.KeepAttachments(true);
 		if (newMessage)
 			if (newAttachments.Count > 0)
