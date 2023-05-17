@@ -1,7 +1,7 @@
 using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
-// using DisCatSharp.Interactivity.Extensions;
+using DisCatSharp.Interactivity.Extensions;
 using EirBot_New.Serialization;
 using System.Reflection;
 
@@ -45,8 +45,8 @@ public class Bot : IDisposable {
 	public static async Task RegisterEvents(DiscordClient client, ReadyEventArgs args) {
 		// Register event handlers
 		client.RegisterEventHandlers(Assembly.GetExecutingAssembly());
-		// // Register interactivity
-		// client.UseInteractivity();
+		// Register interactivity
+		client.UseInteractivity();
 
 		// Execute all "Ready" events that haven't been executed yet
 		foreach (Type t in Assembly.GetExecutingAssembly().GetTypes()) {
