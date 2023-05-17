@@ -6,7 +6,7 @@ using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 
 namespace EirBot_New.Events;
-[SlashCommandGroup("Fun", "Fun and games", true, false), EventHandler]
+[SlashCommandGroup("Fun", "Fun and games", true, false)]
 public class InspireCommand : ApplicationCommandsModule {
 	private const string INSPIROBOT_URL = "http://inspirobot.me/";
 	private const string INSPIROBOT_API_URL = "http://inspirobot.me/api?generate=true";
