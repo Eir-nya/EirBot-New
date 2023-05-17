@@ -117,7 +117,7 @@ public class Connect4Game {
 
 	private bool EvalVerticals(int col, int row, Space color) {
 		int matchingCount = 0;
-		for (int i = row - 3; i < row + 3; i++) {
+		for (int i = row - 3; i <= row + 3; i++) {
 			if (i > -1 && i < 6 && board[col, i] == color) {
 				matchingCount++;
 				if (matchingCount == 4)
@@ -130,7 +130,7 @@ public class Connect4Game {
 
 	private bool EvalDiagonals(int col, int row, Space color) {
 		int matchingCount = 0;
-		for (int i = -3; i < 3; i++)
+		for (int i = -3; i <= 3; i++)
 			if (col + i > -1 && row + i > -1 && col + i < 7 && row + i < 6 && board[col + i, row + i] == color) {
 				matchingCount++;
 				if (matchingCount == 4)
@@ -139,7 +139,7 @@ public class Connect4Game {
 				matchingCount = 0;
 
 		matchingCount = 0;
-		for (int i = -3; i < 3; i++) {
+		for (int i = -3; i <= 3; i++) {
 			if (col + i > -1 && row - i > -1 && col + i < 7 && row - i < 6 && board[col + i, row - i] == color) {
 				matchingCount++;
 				if (matchingCount == 4)
