@@ -1,5 +1,6 @@
 using DisCatSharp;
 using DisCatSharp.Entities;
+using DisCatSharp.Enums;
 
 namespace EirBot_New;
 public static class Util {
@@ -42,5 +43,16 @@ public static class Util {
 			}
 		}
 		return DiscordColor.None;
+	}
+
+	// This closes the modal without needing to send a message.
+	public static async Task CloseModal(DiscordInteraction modalInteraction) {
+		try {
+			await modalInteraction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder().AsEphemeral().WithContent("_ _"));
+		} catch {}
+	}
+
+	public static string GetUniversalEmojiString(DiscordEmoji emoji) {
+		return "<:" + emoji.Name + ":" + emoji.Id + ">";
 	}
 }

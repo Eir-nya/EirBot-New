@@ -6,7 +6,6 @@ using DisCatSharp.Enums;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Interactivity;
-using DisCatSharp.Interactivity.Enums;
 using DisCatSharp.Interactivity.Extensions;
 
 namespace EirBot_New.Events;
@@ -76,10 +75,7 @@ public class TestSlash : ApplicationCommandsModule {
 			return;
 		}
 
-		// This closes the modal without needing to send a message.
-		try {
-			await result.Result.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder().WithContent("success"));
-		} catch {}
+		await Util.CloseModal(result.Result.Interaction);
 
 		await context.Channel.SendMessageAsync(new DiscordMessageBuilder()
 			.WithContent(toSay)
