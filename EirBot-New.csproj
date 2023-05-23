@@ -10,6 +10,10 @@
 
   <ItemGroup>
     <PackageReference Include="DisCatSharp" Version="10.4.0" />
+    <PackageReference Include="DisCatSharp.Analyzer.Roselyn" Version="5.4.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="DisCatSharp.ApplicationCommands" Version="10.4.0" />
     <PackageReference Include="DisCatSharp.Common" Version="10.4.0" />
     <PackageReference Include="DisCatSharp.Interactivity" Version="10.4.0" />
