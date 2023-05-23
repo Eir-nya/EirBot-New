@@ -1,9 +1,12 @@
 using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
+using System.Net;
 
 namespace EirBot_New;
 public static class Util {
+	public const string WEBHOOK_DEFAULT_NAME = "{0} - General purpose webhook";
+
 	public static async Task<DiscordMessage> VerifyMessage(DiscordMessage message, DiscordChannel channel) {
 		if (message.Author != null)
 			return message;
@@ -43,6 +46,45 @@ public static class Util {
 			}
 		}
 		return DiscordColor.None;
+	}
+	public static Stream GetAvatar(string avatarURL) {
+		return new MemoryStream(new WebClient().DownloadData(new Uri(avatarURL)));
+	}
+
+	public static async Task<bool> CheckWebhookPerms(DiscordClient client, DiscordChannel channel) {
+		DiscordMember botMember = await channel.Guild.GetMemberAsync(client.CurrentUser.Id, false);
+		if (botMember == null)
+			botMember = await channel.Guild.GetMemberAsync(client.CurrentUser.Id, true);
+		if (botMember == null)
+			return false;
+		return channel.PermissionsFor(botMember).HasFlag(Permissions.ManageWebhooks);
+	}
+	public static async Task<DiscordWebhook?> GetWebhook(DiscordClient client, DiscordChannel channel) {
+		if (!await CheckWebhookPerms(client, channel))
+			return null;
+		IReadOnlyList<DiscordWebhook> hooks = await channel.Guild.GetWebhooksAsync();
+		foreach (DiscordWebhook hook in hooks)
+			if (hook.User == client.CurrentUser)
+				return hook;
+		return null;
+	}
+	public static async Task ModifyWebhookAsync(DiscordWebhook hook, string? name = null, Stream? avatar = null, ulong? channelID = null) {
+		if (name == null)
+			name = hook.Name;
+		if (avatar == null)
+			avatar = GetAvatar(hook.AvatarUrl);
+		if (channelID == null)
+			channelID = hook.ChannelId;
+		await hook.ModifyAsync(name, avatar, channelID);
+	}
+	public static async Task<DiscordWebhook?> GetOrCreateWebhook(DiscordClient client, DiscordChannel channel) {
+		if (!await CheckWebhookPerms(client, channel))
+			return null;
+		DiscordWebhook? hook = await GetWebhook(client, channel);
+		// Create webhook
+		if (hook == null)
+			hook = await channel.CreateWebhookAsync(string.Format(WEBHOOK_DEFAULT_NAME, client.CurrentUser.Username), GetAvatar(client.CurrentUser.AvatarUrl), "General purpose webhook");
+		return hook;
 	}
 
 	// This closes the modal without needing to send a message.

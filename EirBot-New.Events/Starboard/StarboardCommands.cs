@@ -159,9 +159,9 @@ public class Connect4Events : ApplicationCommandsModule {
 		serverData.Save();
 
 		// Set webhook channel to new channel if possible
-		DiscordWebhook? hook = await StarboardEvents.GetWebhook(context.Client, channel);
+		DiscordWebhook? hook = await Util.GetWebhook(context.Client, channel);
 		if (hook != null)
-			await hook.ModifyAsync(hook.Name, new MemoryStream(new WebClient().DownloadData(new Uri(context.Client.CurrentUser.AvatarUrl))), channel.Id);
+			await Util.ModifyWebhookAsync(hook, null, null, channel.Id);
 
 		await context.EditResponseAsync(new DiscordWebhookBuilder()
 			.WithContent("Starboard channel set to " + channel.Mention + ".")

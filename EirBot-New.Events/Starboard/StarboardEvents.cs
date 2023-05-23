@@ -11,7 +11,6 @@ namespace EirBot_New.Events.Starboard;
 public class StarboardEvents {
 	// Maximum size of attachments to attempt to download and reupload in starboard message
 	public const int MAX_FILE_SIZE = 26214400;
-	public const string WEBHOOK_DEFAULT_NAME = "{0} - Starboard";
 
 	public static DiscordEmoji? starEmoji;
 
@@ -47,7 +46,7 @@ public class StarboardEvents {
 		// Get or create webhook if possible
 		DiscordWebhook? hook = null;
 		if (settings.Value.useWebhook)
-			hook = await GetOrCreateWebhook(client, starboardChannel);
+			hook = await Util.GetOrCreateWebhook(client, starboardChannel);
 
 		// Message already exists, but its webhook status is not what we want, so delete it
 		if (settings.Value.messageLookup.ContainsKey(message.Id)) {
@@ -57,7 +56,7 @@ public class StarboardEvents {
 			if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
 				starboardJumpMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, true);
 			if (starboardMessage != null)
-				if (starboardMessage.WebhookMessage != (settings.Value.useWebhook && await CheckWebhookPerms(client, starboardChannel))) {
+				if (starboardMessage.WebhookMessage != (settings.Value.useWebhook && await Util.CheckWebhookPerms(client, starboardChannel))) {
 					settings.Value.messageLookup.Remove(message.Id);
 					try { await starboardMessage.DeleteAsync(); } catch {}
 				}
@@ -85,6 +84,7 @@ public class StarboardEvents {
 		} else {
 			DiscordMessage newMessage, webhookJumpMessage = null;
 			if (hook != null) {
+				await Util.ModifyWebhookAsync(hook, null, null, starboardChannel.Id);
 				newMessage = await hook.ExecuteAsync(await CreateStarboardMessageWebhook(message, true));
 				webhookJumpMessage = await hook.ExecuteAsync(await CreateStarboardJumpMessage(client, message, true));
 			} else
@@ -126,11 +126,11 @@ public class StarboardEvents {
 		// Get webhook if possible
 		DiscordWebhook? hook = null;
 		if (settings.Value.useWebhook)
-			hook = await GetWebhook(client, starboardChannel);
+			hook = await Util.GetWebhook(client, starboardChannel);
 
 		// Get starboard message, if it already exists
 		DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
-		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await CheckWebhookPerms(client, starboardChannel))))
+		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await Util.CheckWebhookPerms(client, starboardChannel))))
 			return;
 		DiscordMessage? starboardJumpMessage = null;
 		if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
@@ -174,11 +174,11 @@ public class StarboardEvents {
 		// Get webhook if possible
 		DiscordWebhook? hook = null;
 		if (settings.Value.useWebhook)
-			hook = await GetWebhook(client, starboardChannel);
+			hook = await Util.GetWebhook(client, starboardChannel);
 
 		// Get starboard message, if it already exists
 		DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
-		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await CheckWebhookPerms(client, starboardChannel))))
+		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await Util.CheckWebhookPerms(client, starboardChannel))))
 			return;
 		DiscordMessage? starboardJumpMessage = null;
 		if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
@@ -206,10 +206,10 @@ public class StarboardEvents {
 		// Get webhook if possible
 		DiscordWebhook? hook = null;
 		if (settings.Value.useWebhook)
-			hook = await GetWebhook(client, starboardChannel);
+			hook = await Util.GetWebhook(client, starboardChannel);
 
 		DiscordMessage? starboardMessage = await GetStarboardMessage(client, args.Message.Id, settings.Value, starboardChannel, hook, false);
-		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await CheckWebhookPerms(client, starboardChannel))))
+		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await Util.CheckWebhookPerms(client, starboardChannel))))
 			return;
 		DiscordMessage? starboardJumpMessage = null;
 		if (settings.Value.webhookJumpMessageLookup.ContainsKey(args.Message.Id))
@@ -271,35 +271,6 @@ public class StarboardEvents {
 	}
 
 
-
-	private static async Task<DiscordWebhook?> GetOrCreateWebhook(DiscordClient client, DiscordChannel channel) {
-		if (!await CheckWebhookPerms(client, channel))
-			return null;
-		DiscordWebhook? hook = await GetWebhook(client, channel);
-		// Create webhook
-		if (hook == null)
-			hook = await channel.CreateWebhookAsync(string.Format(WEBHOOK_DEFAULT_NAME, client.CurrentUser.Username), new MemoryStream(new WebClient().DownloadData(new Uri(client.CurrentUser.AvatarUrl))), "Starboard");
-		return hook;
-	}
-
-	public static async Task<DiscordWebhook?> GetWebhook(DiscordClient client, DiscordChannel channel) {
-		if (!await CheckWebhookPerms(client, channel))
-			return null;
-		IReadOnlyList<DiscordWebhook> hooks = await channel.Guild.GetWebhooksAsync();
-		foreach (DiscordWebhook hook in hooks)
-			if (hook.User == client.CurrentUser)
-				return hook;
-		return null;
-	}
-
-	private static async Task<bool> CheckWebhookPerms(DiscordClient client, DiscordChannel channel) {
-		DiscordMember botMember = await channel.Guild.GetMemberAsync(client.CurrentUser.Id, false);
-		if (botMember == null)
-			botMember = await channel.Guild.GetMemberAsync(client.CurrentUser.Id, true);
-		if (botMember == null)
-			return false;
-		return channel.PermissionsFor(botMember).HasFlag(Permissions.ManageWebhooks);
-	}
 
 	public static StarboardSettings? GetSettings(DiscordClient client, DiscordGuild guild) {
 		ServerData? serverData = ServerData.GetServerData(client, guild);
