@@ -1,4 +1,5 @@
 using DisCatSharp;
+using DisCatSharp.Enums;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Interactivity.Extensions;
@@ -52,7 +53,7 @@ public class Bot : IDisposable {
 		foreach (Type t in Assembly.GetExecutingAssembly().GetTypes()) {
 			if (t.GetCustomAttribute(typeof(EventHandlerAttribute)) != null) {
 				foreach (MethodInfo mi in t.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) {
-					Attribute? a = mi.GetCustomAttribute<DisCatSharp.EventAttribute>();
+					Attribute? a = mi.GetCustomAttribute<DisCatSharp.Enums.EventAttribute>();
 					if (a != null)
 						if (a.Match(new EventAttribute(DiscordEvent.Ready)))
 							mi.Invoke(null, new object[] { client, args });

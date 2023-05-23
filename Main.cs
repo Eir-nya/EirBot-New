@@ -1,4 +1,5 @@
 ﻿using DisCatSharp;
+using DisCatSharp.Enums;
 
 namespace EirBot_New;
 public class Program {

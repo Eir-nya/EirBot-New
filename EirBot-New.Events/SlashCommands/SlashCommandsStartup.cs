@@ -1,4 +1,5 @@
 using DisCatSharp;
+using DisCatSharp.Enums;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using DisCatSharp.ApplicationCommands;
