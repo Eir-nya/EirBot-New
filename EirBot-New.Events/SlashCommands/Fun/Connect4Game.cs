@@ -57,7 +57,7 @@ public class Connect4Game {
 		description += "\n";
 		description += YELLOW + ": " + yellowPlayer.Mention;
 		if (gameOver && !draw && nextTurnYellow)
-			description += " :confetti_ball";
+			description += " :confetti_ball:";
 		description += "\n";
 		description += DisplayBoard();
 		DiscordMessageBuilder response = new DiscordMessageBuilder()
@@ -152,7 +152,7 @@ public class Connect4Game {
 
 	private void UpdateStatus() {
 		draw = true;
-		for (int i = 0; i < 6; i++)
+		for (int i = 0; i <= 6; i++)
 			if (ColumnFree(i)) {
 				draw = false;
 				break;
