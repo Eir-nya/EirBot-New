@@ -1,4 +1,3 @@
-using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
@@ -18,18 +17,30 @@ public class InspireCommand : ApplicationCommandsModule {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
 		HttpClient webClient = new HttpClient();
-		HttpResponseMessage response = await webClient.GetAsync(new Uri(!christmas ? INSPIROBOT_API_URL : INSPIROBOT_API_CHRISTMAS_URL));
-		string url = await response.Content.ReadAsStringAsync();
-
-		if (string.IsNullOrEmpty(url) || !response.IsSuccessStatusCode) {
+		CancellationTokenSource tokenSource = new CancellationTokenSource();
+		HttpResponseMessage response;
+		try {
+			response = await webClient.GetAsync(new Uri(!christmas ? INSPIROBOT_API_URL : INSPIROBOT_API_CHRISTMAS_URL), tokenSource.Token);
+		} catch (Exception e) {
+			if (e.GetType() == typeof(TaskCanceledException))
+				if (((TaskCanceledException)e).CancellationToken != tokenSource.Token) {
+					// Timed out
+					await context.DeleteResponseAsync();
+					await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
+						.AsEphemeral()
+						.WithContent("Timed out!")
+					);
+					return;
+				}
 			await context.EditResponseAsync(new DiscordWebhookBuilder()
 				.AddEmbed(new DiscordEmbedBuilder()
 					.WithAuthor("Inspirobot", INSPIROBOT_URL, INSPIROBOT_ICON_URL)
-					.WithDescription("Failed to retrieve data from inspirobot.\nReason:\n" + response.ReasonPhrase)
+					.WithDescription("Failed to retrieve data from inspirobot.\nReason:\n" + e.GetType() + ":\n" + e.Message)
 				)
 			);
 			return;
 		}
+		string url = await response.Content.ReadAsStringAsync();
 
 		await context.EditResponseAsync(new DiscordWebhookBuilder()
 			.AddEmbed(new DiscordEmbedBuilder()
@@ -39,6 +50,7 @@ public class InspireCommand : ApplicationCommandsModule {
 			)
 		);
 
+		await Task.Delay(3000);
 		// Force error check - sometimes image width/height will just be 0.
 		// If so, remove the image from the embed and just upload the image as an attachment.
 		// Thanks discord.
