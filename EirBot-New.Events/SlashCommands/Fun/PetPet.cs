@@ -17,7 +17,7 @@ public class PetPetCommandGuildOnly : ApplicationCommandsModule {
 
 [SlashCommandGroup("Fun", "Fun and games", true, false)]
 public class PetPetCommand : ApplicationCommandsModule {
-	private const string PETPET_URL = "https://api.obamabot.me/v2/image/petpet?image={0}";
+	private const string PETPET_URL = "https://api.obamabot.me/v1/image/petpet?avatar={0}";
 
 	[ContextMenu(ApplicationCommandType.User, "Pet2")]
 	public static async Task PetPet(ContextMenuContext context) {
@@ -35,17 +35,33 @@ public class PetPetCommand : ApplicationCommandsModule {
 		if (url.IndexOf("?") > -1)
 			url = url.Split("?")[0];
 
-		HttpClient webClient = new HttpClient();
-		HttpResponseMessage response = await webClient.GetAsync(string.Format(PETPET_URL, url));
+		// v1
+		try {
+			await context.EditResponseAsync(new DiscordWebhookBuilder()
+				.AddFile("Petpet.gif", await new HttpClient().GetStreamAsync(string.Format(PETPET_URL, url)))
+			);
+		} catch (Exception e) {
+			await context.EditResponseAsync(new DiscordWebhookBuilder()
+				.AddEmbed(new DiscordEmbedBuilder()
+					.WithDescription("Failed to receive petpet data.\nReason:\n" + e.GetType() + ":\n" + e.Message)
+				)
+			);
+			return;
+		}
+		// v2
+		/*
+		HttpResponseMessage response = await new HttpClient().GetAsync(string.Format(PETPET_URL, url));
 		string data = await response.Content.ReadAsStringAsync();
 		PetpetJson result;
 		try {
 			result = JsonSerializer.Deserialize<PetpetJson>(data);
 			if (result.error)
-				throw new Exception();
-		} catch {
+				throw new Exception(result.message);
+		} catch (Exception e) {
 			await context.EditResponseAsync(new DiscordWebhookBuilder()
-				.WithContent("Failed to receive petpet data.")
+				.AddEmbed(new DiscordEmbedBuilder()
+					.WithDescription("Failed to receive petpet data.\nReason:\n" + e.GetType() + ":\n" + e.Message)
+				)
 			);
 			return;
 		}
@@ -53,12 +69,15 @@ public class PetPetCommand : ApplicationCommandsModule {
 		await context.EditResponseAsync(new DiscordWebhookBuilder()
 			.AddFile(result.url.Split("/")[result.url.Count(c => c == '/')], await new HttpClient().GetStreamAsync(result.url))
 		);
+		*/
 	}
 
+	/*
 	private class PetpetJson {
 		public bool error { get; set; }
 		public string message { get; set; }
 		public int status { get; set; }
 		public string url { get; set; }
 	}
+	*/
 }
