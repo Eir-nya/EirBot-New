@@ -351,12 +351,26 @@ public class StarboardEvents {
 				mb.WithFiles(newAttachments);
 		if (message.Stickers.Count == 1 && !hasNonGuildSticker)
 			mb.WithSticker(message.Stickers[0]);
+
+		// Attempt to get author's display name in the server
+		string name = message.Author.Username;
+		string avatarURL = message.Author.AvatarUrl;
+		DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
+		if (member == null)
+			member = await message.Guild.GetMemberAsync(message.Author.Id, true);
+		if (member != null) {
+			if (!string.IsNullOrEmpty(member.DisplayName))
+				name = member.DisplayName;
+			if (!string.IsNullOrEmpty(member.GuildAvatarUrl))
+				avatarURL = member.GuildAvatarUrl;
+		}
+
 		return mb
 			.WithEmbed(new DiscordEmbedBuilder()
 				.WithColor(await Util.GetMemberColor(message.Author, message.Channel.Guild))
 				.WithTitle("Jump to message")
 				.WithUrl(message.JumpLink)
-				.WithAuthor(message.Author.Username + (message.Author.IsBot ? " [BOT]" : "") + " (⭐x" + reactions + ")", null, message.Author.AvatarUrl)
+				.WithAuthor(name + (message.Author.IsBot ? " [BOT]" : "") + " (⭐x" + reactions + ")", null, avatarURL)
 				.WithDescription(message.Content)
 				.WithTimestamp(message.Timestamp)
 			);
@@ -387,8 +401,21 @@ public class StarboardEvents {
 		if (message.Stickers.Count == 1 && !hasStickerAndFiles)
 			wb.AddFile(message.Stickers[0].Name, await new HttpClient().GetStreamAsync(message.Stickers[0].Url), false, message.Stickers[0].Description);
 		if (newMessage) {
-			wb.Username = message.Author.Username;
-			wb.AvatarUrl = message.Author.AvatarUrl;
+			// Attempt to get author's display name in the server
+			string name = message.Author.Username;
+			string avatarURL = message.Author.AvatarUrl;
+			DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
+			if (member == null)
+				member = await message.Guild.GetMemberAsync(message.Author.Id, true);
+			if (member != null) {
+				if (!string.IsNullOrEmpty(member.DisplayName))
+					name = member.DisplayName;
+				if (!string.IsNullOrEmpty(member.GuildAvatarUrl))
+					avatarURL = member.GuildAvatarUrl;
+			}
+
+			wb.Username = name;
+			wb.AvatarUrl = avatarURL;
 		}
 		return wb;
 	}
@@ -396,17 +423,30 @@ public class StarboardEvents {
 	private static async Task<DiscordWebhookBuilder> CreateStarboardJumpMessage(DiscordClient client, DiscordMessage message, bool newMessage) {
 		short reactions = await CountReactions(client, message, message.Channel);
 
+		// Attempt to get author's display name in the server
+		string name = message.Author.Username;
+		string avatarURL = message.Author.AvatarUrl;
+		DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
+		if (member == null)
+			member = await message.Guild.GetMemberAsync(message.Author.Id, true);
+		if (member != null) {
+			if (!string.IsNullOrEmpty(member.DisplayName))
+				name = member.DisplayName;
+			if (!string.IsNullOrEmpty(member.GuildAvatarUrl))
+				avatarURL = member.GuildAvatarUrl;
+		}
+
 		DiscordWebhookBuilder wb = new DiscordWebhookBuilder();
 		if (newMessage) {
-			wb.Username = message.Author.Username;
-			wb.AvatarUrl = message.Author.AvatarUrl;
+			wb.Username = name;
+			wb.AvatarUrl = avatarURL;
 		}
 		return wb
 			.AddEmbed(new DiscordEmbedBuilder()
 				.WithColor(await Util.GetMemberColor(message.Author, message.Channel.Guild))
 				.WithTitle("Jump to message")
 				.WithUrl(message.JumpLink)
-				.WithAuthor(message.Author.Username + (message.Author.IsBot ? " [BOT]" : "") + " (⭐x" + reactions + ")", null, message.Author.AvatarUrl)
+				.WithAuthor(name + (message.Author.IsBot ? " [BOT]" : "") + " (⭐x" + reactions + ")", null, avatarURL)
 				.WithTimestamp(message.Timestamp)
 			);
 	}
