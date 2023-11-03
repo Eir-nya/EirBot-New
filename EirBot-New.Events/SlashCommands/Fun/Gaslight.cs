@@ -12,17 +12,26 @@ namespace EirBot_New.Events;
 public class GaslightCommands : ApplicationCommandsModule {
 	[ContextMenu(ApplicationCommandType.Message, "\"Edit\" message")]
 	public static async Task Command(ContextMenuContext context) {
+		DiscordWebhook? hook = await Util.GetOrCreateWebhook(context.Client, context.Channel);
+
 		// Attempt to get author's display name in the server
 		string name = context.TargetMessage.Author.Username;
 		string avatarURL = context.TargetMessage.Author.AvatarUrl;
-		DiscordMember member = await context.Guild.GetMemberAsync(context.TargetMessage.Author.Id, false);
-		if (member == null)
-			member = await context.TargetMessage.Guild.GetMemberAsync(context.TargetMessage.Author.Id, true);
-		if (member != null) {
-			if (!string.IsNullOrEmpty(member.DisplayName))
-				name = member.DisplayName;
-			if (!string.IsNullOrEmpty(member.GuildAvatarUrl))
-				avatarURL = member.GuildAvatarUrl;
+
+		// If webhook message, skip member check
+		if (context.TargetMessage.WebhookMessage && context.TargetMessage.WebhookId == hook.Id) {
+			name = context.TargetMessage.Author.Username;
+			avatarURL = context.TargetMessage.Author.AvatarUrl;
+		} else {
+			DiscordMember member = await context.Guild.GetMemberAsync(context.TargetMessage.Author.Id, false);
+			if (member == null)
+				member = await context.TargetMessage.Guild.GetMemberAsync(context.TargetMessage.Author.Id, true);
+			if (member != null) {
+				if (!string.IsNullOrEmpty(member.DisplayName))
+					name = member.DisplayName;
+				if (!string.IsNullOrEmpty(member.GuildAvatarUrl))
+					avatarURL = member.GuildAvatarUrl;
+			}
 		}
 
 		DiscordInteractionModalBuilder mb = new DiscordInteractionModalBuilder()
@@ -55,19 +64,22 @@ public class GaslightCommands : ApplicationCommandsModule {
 			return;
 		}
 
-		// Send message
-		DiscordWebhook? hook = await Util.GetOrCreateWebhook(context.Client, context.Channel);
-		Stream avatar = Util.GetAvatar(avatarURL);
-		await Util.ModifyWebhookAsync(hook, name, null, context.Channel.Id);
-		await hook.ExecuteAsync(new DiscordWebhookBuilder()
-			.WithUsername(name)
-			.WithAvatarUrl(avatarURL)
-			.WithContent(toSay)
-		);
-		// Delete original if possible
-		Permissions botPermsInChannel = context.Channel.PermissionsFor(await context.Guild.GetMemberAsync(context.Client.CurrentUser.Id));
-		if (botPermsInChannel.HasFlag(Permissions.ManageMessages))
-			await context.TargetMessage.DeleteAsync();
+		// Check if message was sent by this bot hook originally
+		if (context.TargetMessage.WebhookMessage && context.TargetMessage.WebhookId == hook.Id)
+			await hook.EditMessageAsync(context.TargetMessage.Id, new DiscordWebhookBuilder().WithContent(toSay));
+		else {
+			// Send message
+			await Util.ModifyWebhookAsync(hook, name, null, context.Channel.Id);
+			await hook.ExecuteAsync(new DiscordWebhookBuilder()
+				.WithUsername(name)
+				.WithAvatarUrl(avatarURL)
+				.WithContent(toSay));
+
+			// Delete original if possible
+			Permissions botPermsInChannel = context.Channel.PermissionsFor(await context.Guild.GetMemberAsync(context.Client.CurrentUser.Id));
+			if (botPermsInChannel.HasFlag(Permissions.ManageMessages))
+				await context.TargetMessage.DeleteAsync();
+		}
 
 		await Util.CloseModal(result.Result.Interaction);
 	}
