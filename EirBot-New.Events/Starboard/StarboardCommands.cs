@@ -10,7 +10,7 @@ using System.Net;
 
 namespace EirBot_New.Events.Starboard;
 [SlashCommandGroup("Starboard", "Starboard settings.", false, false), EventHandler, GuildOnlyApplicationCommands]
-public class Connect4Events : ApplicationCommandsModule {
+public class StarboardCommands : ApplicationCommandsModule {
 	[SlashCommand("List", "Lists all config.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
 	public static async Task List(InteractionContext context) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());

@@ -8,6 +8,23 @@ using DisCatSharp.EventArgs;
 using EirBot_New.Attributes;
 
 namespace EirBot_New.Events.Connect4;
+
+public class Connnect4ContextMenus : ApplicationCommandsModule {
+	[ContextMenu(ApplicationCommandType.User, "Connect4"), ApplicationCommandRequireGuild]
+	public static async Task Challenge(ContextMenuContext context) {
+		if (context.TargetUser.IsBot) {
+			await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
+				.AsEphemeral()
+				.WithContent("Cannot invite bot users.")
+			);
+			return;
+		}
+
+		DiscordInteractionResponseBuilder rb = await Connect4Events.Challenge(context.Client, context.User, context.TargetUser, context.Guild);
+		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb);
+	}
+}
+
 [SlashCommandGroup("Fun", "Fun and games", true, false), EventHandler, GuildOnlyApplicationCommands]
 public class Connect4Events : ApplicationCommandsModule {
 	private static Dictionary<long, Connect4Game> games = new Dictionary<long, Connect4Game>();
@@ -22,24 +39,31 @@ public class Connect4Events : ApplicationCommandsModule {
 			return;
 		}
 
+		DiscordInteractionResponseBuilder rb = await Challenge(context.Client, context.User, opponent, context.Guild);
+		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb);
+	}
+
+	public static async Task<DiscordInteractionResponseBuilder> Challenge(DiscordClient client, DiscordUser challenger, DiscordUser challengee, DiscordGuild guild) {
 		// Create game
 		DateTimeOffset timestamp = DateTimeOffset.Now;
 		long id = timestamp.ToUnixTimeSeconds();
-		Connect4Game game = new Connect4Game() { client = context.Client, gameID = id, timestamp = timestamp };
-		game.SetPlayers(context.User, opponent);
+		Connect4Game game = new Connect4Game() { client = client, gameID = id, timestamp = timestamp };
+		game.SetPlayers(challenger, challengee);
 		games[game.gameID] = game;
 
-		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-			.AddEmbed(new DiscordEmbedBuilder()
-				.WithColor(await Util.GetMemberColor(context.User, context.Guild))
-				.WithAuthor(context.User.Username, null, context.User.AvatarUrl)
-				.WithDescription(String.Format("{0}, {1} has challenged you to a Connect Four match!\nDo you accept?", opponent.Mention, context.User.Username))
-			)
-			.AddComponents(new DiscordComponent[] {
-				new DiscordButtonComponent(ButtonStyle.Success, "Connect4_start_" + id, "You're on!", false, new DiscordComponentEmoji(1087449113202806834)),
-				new DiscordButtonComponent(ButtonStyle.Danger, "Connect4_refuse_" + id, "Pass", false, new DiscordComponentEmoji(865085988162371624))
-				})
-			);
+		DiscordInteractionResponseBuilder rb = new DiscordInteractionResponseBuilder();
+		rb.AddEmbed(new DiscordEmbedBuilder()
+			.WithColor(await Util.GetMemberColor(challenger, guild))
+			.WithAuthor(challenger.Username, null, challenger.AvatarUrl)
+			.WithDescription(String.Format("{0}, {1} has challenged you to a Connect Four match!\nDo you accept?", challengee.Mention, challenger.Username))
+		);
+		rb.AddComponents(new DiscordComponent[] {
+			new DiscordButtonComponent(ButtonStyle.Success, "Connect4_start_" + id, "You're on!", false, new DiscordComponentEmoji(1087449113202806834)),
+			new DiscordButtonComponent(ButtonStyle.Danger, "Connect4_refuse_" + id, "Pass", false, new DiscordComponentEmoji(865085988162371624))
+			}
+		);
+
+		return rb;
 	}
 
 	[Event(DiscordEvent.ComponentInteractionCreated)]

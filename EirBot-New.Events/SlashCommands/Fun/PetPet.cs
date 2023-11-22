@@ -4,9 +4,16 @@ using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using EirBot_New.Attributes;
-using System.Text.Json;
 
 namespace EirBot_New.Events;
+[GuildOnlyApplicationCommands]
+public class PetPetContextMenu : ApplicationCommandsModule {
+	[ContextMenu(ApplicationCommandType.User, "Pet")]
+	public static async Task PetPet(ContextMenuContext context) {
+		await PetPetCommand.DoPetPet(context, context.TargetUser.AvatarUrl);
+	}
+}
+
 [SlashCommandGroup("Fun", "Fun and games", true, false), GuildOnlyApplicationCommands]
 public class PetPetCommandGuildOnly : ApplicationCommandsModule {
 	[SlashCommand("Pet", "Pets someone.", true, false)]
@@ -18,11 +25,6 @@ public class PetPetCommandGuildOnly : ApplicationCommandsModule {
 [SlashCommandGroup("Fun", "Fun and games", true, false)]
 public class PetPetCommand : ApplicationCommandsModule {
 	private const string PETPET_URL = "https://api.obamabot.me/v1/image/petpet?avatar={0}";
-
-	[ContextMenu(ApplicationCommandType.User, "Pet2")]
-	public static async Task PetPet(ContextMenuContext context) {
-		await DoPetPet(context, context.TargetUser.AvatarUrl);
-	}
 
 	[SlashCommand("Petpet", "Pets an image.", true, false)]
 	public static async Task PetPet(InteractionContext context, [Option("url", "Url of image to pet.")] string url) {

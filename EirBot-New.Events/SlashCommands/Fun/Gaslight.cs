@@ -6,9 +6,10 @@ using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Interactivity;
 using DisCatSharp.Interactivity.Extensions;
+using EirBot_New.Attributes;
 
 namespace EirBot_New.Events;
-[ApplicationCommandRequirePermissions(Permissions.ManageMessages)]
+[ApplicationCommandRequirePermissions(Permissions.ManageMessages), GuildOnlyApplicationCommands]
 public class GaslightCommands : ApplicationCommandsModule {
 	[ContextMenu(ApplicationCommandType.Message, "\"Edit\" message")]
 	public static async Task Command(ContextMenuContext context) {
