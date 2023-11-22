@@ -25,7 +25,7 @@ public class GaslightCommands : ApplicationCommandsModule {
 		} else {
 			DiscordMember member = await context.Guild.GetMemberAsync(context.TargetMessage.Author.Id, false);
 			if (member == null)
-				member = await context.TargetMessage.Guild.GetMemberAsync(context.TargetMessage.Author.Id, true);
+				member = await context.Guild.GetMemberAsync(context.TargetMessage.Author.Id, true);
 			if (member != null) {
 				if (!string.IsNullOrEmpty(member.DisplayName))
 					name = member.DisplayName;

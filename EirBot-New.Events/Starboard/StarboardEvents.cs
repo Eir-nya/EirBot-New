@@ -355,9 +355,9 @@ public class StarboardEvents {
 		// Attempt to get author's display name in the server
 		string name = message.Author.Username;
 		string avatarURL = message.Author.AvatarUrl;
-		DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
+		DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
 		if (member == null)
-			member = await message.Guild.GetMemberAsync(message.Author.Id, true);
+			member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
 		if (member != null) {
 			if (!string.IsNullOrEmpty(member.DisplayName))
 				name = member.DisplayName;
@@ -404,9 +404,9 @@ public class StarboardEvents {
 			// Attempt to get author's display name in the server
 			string name = message.Author.Username;
 			string avatarURL = message.Author.AvatarUrl;
-			DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
+			DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
 			if (member == null)
-				member = await message.Guild.GetMemberAsync(message.Author.Id, true);
+				member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
 			if (member != null) {
 				if (!string.IsNullOrEmpty(member.DisplayName))
 					name = member.DisplayName;
@@ -426,9 +426,9 @@ public class StarboardEvents {
 		// Attempt to get author's display name in the server
 		string name = message.Author.Username;
 		string avatarURL = message.Author.AvatarUrl;
-		DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
+		DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
 		if (member == null)
-			member = await message.Guild.GetMemberAsync(message.Author.Id, true);
+			member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
 		if (member != null) {
 			if (!string.IsNullOrEmpty(member.DisplayName))
 				name = member.DisplayName;
