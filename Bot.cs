@@ -1,8 +1,9 @@
 using DisCatSharp;
-using DisCatSharp.Enums;
+using DisCatSharp.ApplicationCommands;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Interactivity.Extensions;
+using EirBot_New.Events;
 using EirBot_New.Serialization;
 using System.Reflection;
 
@@ -20,7 +21,7 @@ public class Bot : IDisposable {
 
 	public async Task Init() {
 		client.Ready += async (cli, e) => await Register(cli, this);
-		client.Ready += RegisterEvents;
+		await RegisterEvents(client);
 		client.Ready += SetInitialStatus;
 		await client.StartAsync();
 		await Task.Delay(-1);
@@ -43,12 +44,26 @@ public class Bot : IDisposable {
 		await client.UpdateStatusAsync(new DiscordActivity("with code", ActivityType.Playing));
 	}
 
-	public static async Task RegisterEvents(DiscordClient client, ReadyEventArgs args) {
-		// Register event handlers
-		client.RegisterEventHandlers(Assembly.GetExecutingAssembly());
-		// Register interactivity
-		client.UseInteractivity();
+	public static async Task RegisterEvents(DiscordShardedClient client) {
+		IReadOnlyDictionary<int, ApplicationCommandsExtension> commands = await client.UseApplicationCommandsAsync(new ApplicationCommandsConfiguration() {
+			// DebugStartup = true,
+			EnableDefaultHelp = false
+		});
+		// Register application commands
+		await ApplicationCommandsStartup.Setup(client, commands);
 
+		HashSet<Task> tasks = new HashSet<Task>();
+		foreach (DiscordClient cli in client.ShardClients.Values) {
+			tasks.Add(Task.Run(async () => {
+				// Register event handlers
+				cli.RegisterEventHandlers(Assembly.GetExecutingAssembly());
+				// Register interactivity
+				cli.UseInteractivity();
+			}));
+		}
+		await Task.WhenAll(tasks);
+
+		/*
 		// Execute all "Ready" events that haven't been executed yet
 		foreach (Type t in Assembly.GetExecutingAssembly().GetTypes()) {
 			if (t.GetCustomAttribute(typeof(EventHandlerAttribute)) != null) {
@@ -60,5 +75,6 @@ public class Bot : IDisposable {
 				}
 			}
 		}
+		*/
 	}
 }
