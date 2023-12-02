@@ -314,7 +314,7 @@ public class StarboardEvents {
 			// Retrieve file
 			if (attachment.FileSize.GetValueOrDefault(0) <= MAX_FILE_SIZE) {
 				if (downloadFiles)
-					files[attachment.FileName] = await new HttpClient().GetStreamAsync(attachment.Url);
+					files[attachment.Filename] = await new HttpClient().GetStreamAsync(attachment.Url);
 			// Add to attachment string
 			} else
 				attachmentString += attachment.Url + "\n";

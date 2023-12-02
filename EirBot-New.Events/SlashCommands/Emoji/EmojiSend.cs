@@ -104,9 +104,23 @@ public class TestSlash : ApplicationCommandsModule {
 			DiscordEmoji emoji = DiscordEmoji.FromGuildEmote(picker.context.Client, Convert.ToUInt64(arg));
 			DiscordWebhook? hook = await Util.GetOrCreateWebhook(picker.context.Client, picker.context.Channel);
 			await Util.ModifyWebhookAsync(hook, null, null, picker.context.Channel.Id);
+
+			// Attempt to get author's display name in the server
+			string name = picker.context.User.Username;
+			string avatarURL = picker.context.User.AvatarUrl;
+			DiscordMember member = await args.Channel.Guild.GetMemberAsync(args.User.Id, false);
+			if (member == null)
+				member = await args.Channel.Guild.GetMemberAsync(args.User.Id, true);
+			if (member != null) {
+				if (!string.IsNullOrEmpty(member.DisplayName))
+					name = member.DisplayName;
+				if (!string.IsNullOrEmpty(member.GuildAvatarUrl))
+					avatarURL = member.GuildAvatarUrl;
+			}
+
 			await hook.ExecuteAsync(new DiscordWebhookBuilder()
-				.WithUsername(picker.context.User.Username)
-				.WithAvatarUrl(picker.context.User.AvatarUrl)
+				.WithUsername(name)
+				.WithAvatarUrl(avatarURL)
 				.WithContent(emoji.Url + "?size=48")
 			);
 			activeEmojiPickers.Remove(picker.id);
