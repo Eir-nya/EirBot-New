@@ -2,17 +2,17 @@ using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
-using DisCatSharp.Enums;
 using DisCatSharp.Entities;
+using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Interactivity;
 using DisCatSharp.Interactivity.Extensions;
 
-namespace EirBot_New.Events;
+namespace EirBot_New.Events {
 [EventHandler]
 public class TestCommands {
 	[Event(DiscordEvent.MessageCreated)]
-	public static async Task PingPong(DiscordClient client, MessageCreateEventArgs args) {
+	public async Task PingPong(DiscordClient client, MessageCreateEventArgs args) {
 		if (args.Message.Content.ToLower().StartsWith("!ping")) {
 			await new DiscordMessageBuilder()
 				.WithReply(args.Message.Id, true)
@@ -27,11 +27,12 @@ public class TestCommands {
 		}
 	}
 }
+}
 
-[SlashCommandGroup("Test", "Test commands.", true, false)]
-public class TestSlash : ApplicationCommandsModule {
+namespace EirBot_New.AppCommands {
+public partial class TestCommands : ApplicationCommandsModule {
 	[SlashCommand("Ping", "Sends back \"Pong.\"", true, false)]
-	public static async Task PingPong(InteractionContext context) {
+	public async Task PingPong(InteractionContext context) {
 		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 			.AddEmbed(new DiscordEmbedBuilder()
 				.WithTitle("!ping")
@@ -44,7 +45,7 @@ public class TestSlash : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("SayModal", "Modal test that sends a message as the bot somewhere.", true, false), ApplicationCommandRequireOwner]
-	public static async Task SayModal(InteractionContext context) {
+	public async Task SayModal(InteractionContext context) {
 		DiscordInteractionModalBuilder mb = new DiscordInteractionModalBuilder()
 			.WithTitle("Speak as " + context.Client.CurrentUser.Username)
 			.WithCustomId("modal_say");

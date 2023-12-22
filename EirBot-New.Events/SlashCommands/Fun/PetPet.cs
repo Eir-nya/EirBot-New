@@ -3,33 +3,32 @@ using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
-using EirBot_New.Attributes;
 
-namespace EirBot_New.Events;
-[GuildOnlyApplicationCommands]
-public class PetPetContextMenu : ApplicationCommandsModule {
+namespace EirBot_New.AppCommands {
+using EirBot_New.Events;
+public partial class ContextMenuCommands : ApplicationCommandsModule {
 	[ContextMenu(ApplicationCommandType.User, "Pet")]
-	public static async Task PetPet(ContextMenuContext context) {
+	public async Task PetPet(ContextMenuContext context) {
 		await PetPetCommand.DoPetPet(context, context.TargetUser.AvatarUrl);
 	}
 }
 
-[SlashCommandGroup("Fun", "Fun and games", true, false), GuildOnlyApplicationCommands]
-public class PetPetCommandGuildOnly : ApplicationCommandsModule {
+public partial class FunCommands : ApplicationCommandsModule {
 	[SlashCommand("Pet", "Pets someone.", true, false)]
-	public static async Task PetPet(InteractionContext context, [Option("target", "User to pet.")] DiscordUser target) {
+	public async Task PetPet(InteractionContext context, [Option("target", "User to pet.")] DiscordUser target) {
 		await PetPetCommand.DoPetPet(context, target.AvatarUrl);
 	}
-}
-
-[SlashCommandGroup("Fun", "Fun and games", true, false)]
-public class PetPetCommand : ApplicationCommandsModule {
-	private const string PETPET_URL = "https://api.obamabot.me/v1/image/petpet?avatar={0}";
 
 	[SlashCommand("Petpet", "Pets an image.", true, false)]
 	public static async Task PetPet(InteractionContext context, [Option("url", "Url of image to pet.")] string url) {
-		await DoPetPet(context, url);
+		await PetPetCommand.DoPetPet(context, url);
 	}
+}
+}
+
+namespace EirBot_New.Events {
+public class PetPetCommand {
+	private const string PETPET_URL = "https://api.obamabot.me/v1/image/petpet?avatar={0}";
 
 	public static async Task DoPetPet(BaseContext context, string url) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
@@ -82,4 +81,5 @@ public class PetPetCommand : ApplicationCommandsModule {
 		public string url { get; set; }
 	}
 	*/
+}
 }

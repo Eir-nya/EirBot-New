@@ -9,7 +9,6 @@ public class ApplicationCommandsStartup {
 	public static async Task Setup(DiscordShardedClient client, IReadOnlyDictionary<int, ApplicationCommandsExtension> commands) {
 		foreach (Type t in Assembly.GetExecutingAssembly().GetTypes())
 			if (t.IsSubclassOf(typeof(ApplicationCommandsModule))) {
-				Console.WriteLine(t.FullName);
 				GuildOnlyApplicationCommandsAttribute guildOnlyAttr = (GuildOnlyApplicationCommandsAttribute)t.GetCustomAttribute(typeof(GuildOnlyApplicationCommandsAttribute));
 				if (guildOnlyAttr != null) {
 					foreach (ulong id in guildOnlyAttr.guildList)

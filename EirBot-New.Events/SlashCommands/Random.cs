@@ -1,11 +1,10 @@
-using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Enums;
 using DisCatSharp.Entities;
 
-namespace EirBot_New.Events;
+namespace EirBot_New.AppCommands;
 public struct RandomMethods {
 	public static string GetRollResult(int sides, int number) {
 		string resultString = "";
@@ -26,56 +25,55 @@ public struct RandomMethods {
 	}
 }
 
-public class RandomCommands : ApplicationCommandsModule {
+public partial class GenericCommands : ApplicationCommandsModule {
 	[SlashCommand("Flip", "Flip a coin.", true, false)]
-	public static async Task Flip(InteractionContext context) {
+	public async Task Flip(InteractionContext context) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 		bool flip = Random.Shared.NextSingle() < 0.5f;
 		await RandomMethods.PostResult(context, ":coin: **" + (flip ? "Heads" : "Tails") + "**");
 	}
 
 	// TODO: Pick command
-	private static async Task Pick(InteractionContext context, params string[] options) {
-		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-		string picked = options[Random.Shared.Next(1, options.Length)];
-		await RandomMethods.PostResult(context, ":game_die: Picked **" + picked + "**.");
-	}
+	// private async Task Pick(InteractionContext context, params string[] options) {
+	// 	await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+	// 	string picked = options[Random.Shared.Next(1, options.Length)];
+	// 	await RandomMethods.PostResult(context, ":game_die: Picked **" + picked + "**.");
+	// }
 }
 
-[SlashCommandGroup("Roll", "Roll dice.", true, false), EventHandler]
-public class RollCommands : ApplicationCommandsModule {
+public partial class RollCommands : ApplicationCommandsModule {
 	[SlashCommand("D4", "Roll one or more D4s.", true, false)]
-	public static async Task D4(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
+	public async Task D4(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 		await RandomMethods.PostResult(context, RandomMethods.GetRollResult(4, number));
 	}
 	[SlashCommand("D6", "Roll one or more D6s.", true, false)]
-	public static async Task D6(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
+	public async Task D6(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 		await RandomMethods.PostResult(context, RandomMethods.GetRollResult(6, number));
 	}
 	[SlashCommand("Dice", "Roll one or more dice (D6s).", true, false)]
-	public static async Task Dice(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
+	public async Task Dice(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 		await RandomMethods.PostResult(context, RandomMethods.GetRollResult(6, number));
 	}
 	[SlashCommand("D8", "Roll one or more D8s.", true, false)]
-	public static async Task D8(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
+	public async Task D8(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 		await RandomMethods.PostResult(context, RandomMethods.GetRollResult(8, number));
 	}
 	[SlashCommand("D10", "Roll one or more D10s.", true, false)]
-	public static async Task D10(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
+	public async Task D10(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 		await RandomMethods.PostResult(context, RandomMethods.GetRollResult(10, number));
 	}
 	[SlashCommand("D20", "Roll one or more D20s.", true, false)]
-	public static async Task D20(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
+	public async Task D20(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 		await RandomMethods.PostResult(context, RandomMethods.GetRollResult(20, number));
 	}
 	[SlashCommand("D100", "Roll one or more D100s.", true, false)]
-	public static async Task D100(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
+	public async Task D100(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 		await RandomMethods.PostResult(context, RandomMethods.GetRollResult(100, number));
 	}
@@ -97,7 +95,7 @@ public class RollCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("Fate", "Roll Fate RPG dice (4).", true, false)]
-	public static async Task Fate(InteractionContext context, [Option("modifier", "Modifier to add to roll result."), MinimumValue(-20), MaximumValue(20)] int modifier = 0) {
+	public async Task Fate(InteractionContext context, [Option("modifier", "Modifier to add to roll result."), MinimumValue(-20), MaximumValue(20)] int modifier = 0) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 		string result = "Fate :game_die: **__";
 

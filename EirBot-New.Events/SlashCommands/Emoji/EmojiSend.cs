@@ -5,12 +5,13 @@ using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Enums;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
+using EirBot_New.Events.Emoji;
 
-namespace EirBot_New.Events.Emoji;
-[SlashCommandGroup("Emoji", "Emoji commands.", true, false), ApplicationCommandRequireGuild, EventHandler]
-public class TestSlash : ApplicationCommandsModule {
+namespace EirBot_New.Events.Emoji {
+[EventHandler]
+public class EmojiEvents {
 	public const int ROWS_PER_PAGE = 4;
-	private static Dictionary<ulong, EmojiPickerData> activeEmojiPickers = new Dictionary<ulong, EmojiPickerData>();
+	protected internal static Dictionary<ulong, EmojiPickerData> activeEmojiPickers = new Dictionary<ulong, EmojiPickerData>();
 
 	public class EmojiPickerData {
 		public InteractionContext context;
@@ -26,31 +27,6 @@ public class TestSlash : ApplicationCommandsModule {
 			this.emojis = emojis;
 			this.totalPages = (int)MathF.Ceiling((float)emojis.Count / (5 * ROWS_PER_PAGE));
 		}
-	}
-
-	[SlashCommand("Send", "Sends an emoji to the chat as you.", true, false)]
-	public static async Task Send(InteractionContext context, [Option("Search", "Text to search for emojis with.")] string search = "") {
-		DiscordInteractionResponseBuilder rb = new DiscordInteractionResponseBuilder()
-			.AsEphemeral()
-			.WithContent("_ _");
-
-		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb);
-
-		// Get all emojis
-		ulong id = (await context.GetOriginalResponseAsync()).Id;
-		EmojiPickerData picker = new EmojiPickerData(context, id, await GetAllEmoji(context.Client, context.Guild, search));
-
-		// No emojis found.
-		if (picker.emojis.Count == 0) {
-			await picker.context.EditResponseAsync(new DiscordWebhookBuilder()
-				.WithContent("No emojis found for search \"" + search + "\".")
-			);
-			return;
-		}
-
-		activeEmojiPickers[id] = picker;
-
-		await PaginateEmojis(picker);
 	}
 
 	private static DiscordButtonComponent[] PageButtons(EmojiPickerData picker) {
@@ -128,7 +104,7 @@ public class TestSlash : ApplicationCommandsModule {
 		}
 	}
 
-	private static async Task<List<DiscordEmoji>> GetAllEmoji(DiscordClient client, DiscordGuild currentGuild, string search) {
+	protected internal static async Task<List<DiscordEmoji>> GetAllEmoji(DiscordClient client, DiscordGuild currentGuild, string search) {
 		List<DiscordEmoji> emoji = new List<DiscordEmoji>();
 		foreach (DiscordGuild g in client.Guilds.Values)
 			foreach (DiscordEmoji e in await g.GetEmojisAsync())
@@ -138,4 +114,35 @@ public class TestSlash : ApplicationCommandsModule {
 		emoji.Sort((emoji1, emoji2) => emoji1.Name.CompareTo(emoji2.Name));
 		return emoji;
 	}
+}
+}
+
+namespace EirBot_New.AppCommands {
+using EirBot_New.Events.Emoji;
+public partial class EmojiCommands : ApplicationCommandsModule {
+	[SlashCommand("Send", "Sends an emoji to the chat as you.", true, false)]
+	public async Task Send(InteractionContext context, [Option("Search", "Text to search for emojis with.")] string search = "") {
+		DiscordInteractionResponseBuilder rb = new DiscordInteractionResponseBuilder()
+			.AsEphemeral()
+			.WithContent("_ _");
+
+		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb);
+
+		// Get all emojis
+		ulong id = (await context.GetOriginalResponseAsync()).Id;
+		EmojiEvents.EmojiPickerData picker = new EmojiEvents.EmojiPickerData(context, id, await EmojiEvents.GetAllEmoji(context.Client, context.Guild, search));
+
+		// No emojis found.
+		if (picker.emojis.Count == 0) {
+			await picker.context.EditResponseAsync(new DiscordWebhookBuilder()
+				.WithContent("No emojis found for search \"" + search + "\".")
+			);
+			return;
+		}
+
+		EmojiEvents.activeEmojiPickers[id] = picker;
+
+		await EmojiEvents.PaginateEmojis(picker);
+	}
+}
 }

@@ -4,16 +4,16 @@ using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 
-namespace EirBot_New.Events;
-[SlashCommandGroup("Fun", "Fun and games", true, false)]
-public class InspireCommand : ApplicationCommandsModule {
+namespace EirBot_New.AppCommands;
+
+public partial class FunCommands : ApplicationCommandsModule {
 	private const string INSPIROBOT_URL = "http://inspirobot.me/";
 	private const string INSPIROBOT_API_URL = "http://inspirobot.me/api?generate=true";
 	private const string INSPIROBOT_API_CHRISTMAS_URL = "http://inspirobot.me/api?generate=true&season=xmas";
 	private const string INSPIROBOT_ICON_URL = "https://inspirobot.me/website/images/favicon.png";
 
 	[SlashCommand("Inspire", "Generates a random inspirational image using inspirobot.me.", true, false)]
-	public static async Task Inspire(InteractionContext context, [Option("Christmas", "Requests a christmas-themed inspirational image.")] bool christmas = false) {
+	public async Task Inspire(InteractionContext context, [Option("Christmas", "Requests a christmas-themed inspirational image.")] bool christmas = false) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
 		HttpClient webClient = new HttpClient();

@@ -5,13 +5,12 @@ using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Enums;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
-using EirBot_New.Attributes;
 
-namespace EirBot_New.Events.Connect4;
-
-public class Connnect4ContextMenus : ApplicationCommandsModule {
+namespace EirBot_New.AppCommands {
+using EirBot_New.Events.Connect4;
+public partial class ContextMenuCommands : ApplicationCommandsModule {
 	[ContextMenu(ApplicationCommandType.User, "Connect4"), ApplicationCommandRequireGuild]
-	public static async Task Challenge(ContextMenuContext context) {
+	public async Task Challenge(ContextMenuContext context) {
 		if (context.TargetUser.IsBot) {
 			await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 				.AsEphemeral()
@@ -25,12 +24,9 @@ public class Connnect4ContextMenus : ApplicationCommandsModule {
 	}
 }
 
-[SlashCommandGroup("Fun", "Fun and games", true, false), EventHandler, GuildOnlyApplicationCommands]
-public class Connect4Events : ApplicationCommandsModule {
-	private static Dictionary<long, Connect4Game> games = new Dictionary<long, Connect4Game>();
-
-	[SlashCommand("Connect4", "Play Connect Four with another user.", true, false)]
-	public static async Task Connect4(InteractionContext context, [Option("Opponent", "Opponent to play against.\nThey will be yellow, you will be red.", false)] DiscordUser opponent) {
+public partial class FunCommands : ApplicationCommandsModule {
+	[SlashCommand("connect4", "Play Connect Four with another user.", true, false)]
+	public async Task Connect(InteractionContext context, [Option("Opponent", "Opponent to play against.\nThey will be yellow, you will be red.", false)] DiscordUser opponent) {
 		if (opponent.IsBot) {
 			await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 				.AsEphemeral()
@@ -39,9 +35,16 @@ public class Connect4Events : ApplicationCommandsModule {
 			return;
 		}
 
-		DiscordInteractionResponseBuilder rb = await Challenge(context.Client, context.User, opponent, context.Guild);
+		DiscordInteractionResponseBuilder rb = await Connect4Events.Challenge(context.Client, context.User, opponent, context.Guild);
 		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb);
 	}
+}
+}
+
+namespace EirBot_New.Events.Connect4 {
+[EventHandler]
+public class Connect4Events {
+	private static Dictionary<long, Connect4Game> games = new Dictionary<long, Connect4Game>();
 
 	public static async Task<DiscordInteractionResponseBuilder> Challenge(DiscordClient client, DiscordUser challenger, DiscordUser challengee, DiscordGuild guild) {
 		// Create game
@@ -166,4 +169,5 @@ public class Connect4Events : ApplicationCommandsModule {
 				break;
 		}
 	}
+}
 }
