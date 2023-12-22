@@ -20,9 +20,9 @@ public class Bot : IDisposable {
 	}
 
 	public async Task Init() {
-		client.Ready += async (cli, e) => await Register(cli, this);
+		client.GuildDownloadCompleted += async (cli, e) => await Register(cli, this);
 		await RegisterEvents(client);
-		client.Ready += SetInitialStatus;
+		client.GuildDownloadCompleted += SetInitialStatus;
 		await client.StartAsync();
 		await Task.Delay(-1);
 	}
@@ -40,17 +40,18 @@ public class Bot : IDisposable {
 		});
 	}
 
-	public static async Task SetInitialStatus(DiscordClient client, ReadyEventArgs args) {
+	public static async Task SetInitialStatus(DiscordClient client, GuildDownloadCompletedEventArgs args) {
 		await client.UpdateStatusAsync(new DiscordActivity("with code", ActivityType.Playing));
 	}
 
 	public static async Task RegisterEvents(DiscordShardedClient client) {
 		IReadOnlyDictionary<int, ApplicationCommandsExtension> commands = await client.UseApplicationCommandsAsync(new ApplicationCommandsConfiguration() {
 			// DebugStartup = true,
-			EnableDefaultHelp = false
+			EnableDefaultHelp = false,
+			ManualOverride = true
 		});
 		// Register application commands
-		await ApplicationCommandsStartup.Setup(client, commands);
+		ApplicationCommandsStartup.Setup(client, commands);
 
 		HashSet<Task> tasks = new HashSet<Task>();
 		foreach (DiscordClient cli in client.ShardClients.Values) {

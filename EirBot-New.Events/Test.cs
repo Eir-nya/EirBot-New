@@ -83,3 +83,4 @@ public partial class TestCommands : ApplicationCommandsModule {
 		);
 	}
 }
+}
