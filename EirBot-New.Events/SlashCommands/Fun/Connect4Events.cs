@@ -25,7 +25,7 @@ public partial class ContextMenuCommands : ApplicationCommandsModule {
 }
 
 public partial class FunCommands : ApplicationCommandsModule {
-	[SlashCommand("connect4", "Play Connect Four with another user.", true, false)]
+	[SlashCommand("connect4", "Play Connect Four with another user.", true, false), ApplicationCommandRequireGuild]
 	public static async Task Connect(InteractionContext context, [Option("Opponent", "Opponent to play against.\nThey will be yellow, you will be red.", false)] DiscordUser opponent) {
 		if (opponent.IsBot) {
 			await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
