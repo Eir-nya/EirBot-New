@@ -10,7 +10,7 @@ using DisCatSharp.Interactivity.Extensions;
 namespace EirBot_New.AppCommands;
 public partial class GenericCommands : ApplicationCommandsModule {
 	[ContextMenu(ApplicationCommandType.Message, "\"Edit\" message"), ApplicationCommandRequirePermissions(Permissions.ManageMessages)]
-	public async Task Command(ContextMenuContext context) {
+	public static async Task Command(ContextMenuContext context) {
 		DiscordWebhook? hook = await Util.GetOrCreateWebhook(context.Client, context.Channel);
 
 		// Attempt to get author's display name in the server

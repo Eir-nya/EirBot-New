@@ -9,7 +9,7 @@ namespace EirBot_New.AppCommands;
 using EirBot_New.Events.Starboard;
 public partial class StarboardCommands : ApplicationCommandsModule {
 	[SlashCommand("List", "Lists all config.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
-	public async Task List(InteractionContext context) {
+	public static async Task List(InteractionContext context) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 		StarboardSettings? settings = StarboardEvents.GetSettings(context.Client, context.Guild);
 		if (settings == null) {
@@ -42,7 +42,7 @@ public partial class StarboardCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("minStars", "Set minimum stars for adding to starboard.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
-	public async Task MinStars(InteractionContext context, [Option("minimum-stars", "Minimum star amount to add a message to starboard.", false), MinimumValue(1), MaximumValue(25)] int minStars) {
+	public static async Task MinStars(InteractionContext context, [Option("minimum-stars", "Minimum star amount to add a message to starboard.", false), MinimumValue(1), MaximumValue(25)] int minStars) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
 		if (serverData == null) {
@@ -58,7 +58,7 @@ public partial class StarboardCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("allowNSFW", "Allow messages from NSFW channels in the starboard.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
-	public async Task AllowNSFW(InteractionContext context, [Option("allow-NSFW", "Whether messages from NSFW channels should be posted in the starboard.", false)] bool allowNSFW) {
+	public static async Task AllowNSFW(InteractionContext context, [Option("allow-NSFW", "Whether messages from NSFW channels should be posted in the starboard.", false)] bool allowNSFW) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
 		if (serverData == null) {
@@ -74,7 +74,7 @@ public partial class StarboardCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("allowSelfStar", "Count star reactions from the message sender.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
-	public async Task AllowSelfStar(InteractionContext context, [Option("allow-self-star", "Whether the message sender's own star reaction counts towards the starboard.", false)] bool allowSelfStar) {
+	public static async Task AllowSelfStar(InteractionContext context, [Option("allow-self-star", "Whether the message sender's own star reaction counts towards the starboard.", false)] bool allowSelfStar) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
 		if (serverData == null) {
@@ -90,7 +90,7 @@ public partial class StarboardCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("removeWhenUnstarred", "Remove messages from the starboard when they fall below the minimum.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
-	public async Task RemoveWhenUnstarred(InteractionContext context, [Option("remove-when-unstarred", "Whether starboard messages should be removed when star count falls below the minimum star count.", false)] bool removeWhenUnstarred) {
+	public static async Task RemoveWhenUnstarred(InteractionContext context, [Option("remove-when-unstarred", "Whether starboard messages should be removed when star count falls below the minimum star count.", false)] bool removeWhenUnstarred) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
 		if (serverData == null) {
@@ -106,7 +106,7 @@ public partial class StarboardCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("removeWhenDeleted", "Remove messages from the starboard when the original messages are deleted.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
-	public async Task RemoveWhenDeleted(InteractionContext context, [Option("remove-when-deleted", "Whether starboard messages should be removed when original message is deleted.", false)] bool removeWhenDeleted) {
+	public static async Task RemoveWhenDeleted(InteractionContext context, [Option("remove-when-deleted", "Whether starboard messages should be removed when original message is deleted.", false)] bool removeWhenDeleted) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
 		if (serverData == null) {
@@ -122,7 +122,7 @@ public partial class StarboardCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("useWebhook", "Use a webhook when posting to starboard (requires \"Manage Webhooks\" perm)", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageWebhooks)]
-	public async Task UseWebhook(InteractionContext context, [Option("use-webhook", "Whether a webhook should be used when posting to the starboard", false)] bool useWebhook) {
+	public static async Task UseWebhook(InteractionContext context, [Option("use-webhook", "Whether a webhook should be used when posting to the starboard", false)] bool useWebhook) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
 		if (serverData == null) {
@@ -138,7 +138,7 @@ public partial class StarboardCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("channel", "Set starboard channel.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
-	public async Task Channel(InteractionContext context, [Option("channel", "Channel to post starboard messages in.", false), ChannelTypes(ChannelType.Text)] DiscordChannel channel) {
+	public static async Task Channel(InteractionContext context, [Option("channel", "Channel to post starboard messages in.", false), ChannelTypes(ChannelType.Text)] DiscordChannel channel) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
 		if (serverData == null) {
@@ -166,7 +166,7 @@ public partial class StarboardCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("ignorechannel", "Ignore channels for starboard tracking.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
-	public async Task IgnoreChannel(InteractionContext context, [Option("channel", "Channel to change ignore status of.", false), ChannelTypes(ChannelType.Text)] DiscordChannel channel, [Option("ignore", "Whether to ignore this channel in starboard operations.", false)] bool ignore = true) {
+	public static async Task IgnoreChannel(InteractionContext context, [Option("channel", "Channel to change ignore status of.", false), ChannelTypes(ChannelType.Text)] DiscordChannel channel, [Option("ignore", "Whether to ignore this channel in starboard operations.", false)] bool ignore = true) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
 		if (serverData == null) {
@@ -187,7 +187,7 @@ public partial class StarboardCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("disable", "Disables starboard.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels)]
-	public async Task Disable(InteractionContext context) {
+	public static async Task Disable(InteractionContext context) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
 		if (serverData == null) {

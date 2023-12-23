@@ -53,9 +53,9 @@ public class Bot : IDisposable {
 		// Register application commands
 		ApplicationCommandsStartup.Setup(client, commands);
 
-		HashSet<Task> tasks = new HashSet<Task>();
+		HashSet<Task> tasks = new();
 		foreach (DiscordClient cli in client.ShardClients.Values) {
-			tasks.Add(Task.Run(async () => {
+			tasks.Add(Task.Run(() => {
 				// Register event handlers
 				cli.RegisterEventHandlers(Assembly.GetExecutingAssembly());
 				// Register interactivity

@@ -41,7 +41,7 @@ public static class Util {
 				if (member != null)
 					return member.Color;
 			// Member not found
-			} catch (DisCatSharp.Exceptions.NotFoundException e) {
+			} catch (DisCatSharp.Exceptions.NotFoundException) {
 				return DiscordColor.None;
 			}
 		}

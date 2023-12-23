@@ -34,7 +34,7 @@ public abstract class Saveable {
 		return true;
 	}
 
-	public static object Load(string fileName, Type t) {
+	public static object? Load(string fileName, Type t) {
 		string path = "data/" + t.ToString();
 		if (!Directory.Exists(path))
 			throw new DirectoryNotFoundException();

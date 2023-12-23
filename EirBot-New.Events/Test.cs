@@ -12,7 +12,7 @@ namespace EirBot_New.Events {
 [EventHandler]
 public class TestCommands {
 	[Event(DiscordEvent.MessageCreated)]
-	public async Task PingPong(DiscordClient client, MessageCreateEventArgs args) {
+	public static async Task PingPong(DiscordClient client, MessageCreateEventArgs args) {
 		if (args.Message.Content.ToLower().StartsWith("!ping")) {
 			await new DiscordMessageBuilder()
 				.WithReply(args.Message.Id, true)
@@ -32,7 +32,7 @@ public class TestCommands {
 namespace EirBot_New.AppCommands {
 public partial class TestCommands : ApplicationCommandsModule {
 	[SlashCommand("Ping", "Sends back \"Pong.\"", true, false)]
-	public async Task PingPong(InteractionContext context) {
+	public static async Task PingPong(InteractionContext context) {
 		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 			.AddEmbed(new DiscordEmbedBuilder()
 				.WithTitle("!ping")
@@ -45,7 +45,7 @@ public partial class TestCommands : ApplicationCommandsModule {
 	}
 
 	[SlashCommand("SayModal", "Modal test that sends a message as the bot somewhere.", true, false), ApplicationCommandRequireTeamOwner]
-	public async Task SayModal(InteractionContext context) {
+	public static async Task SayModal(InteractionContext context) {
 		DiscordInteractionModalBuilder mb = new DiscordInteractionModalBuilder()
 			.WithTitle("Speak as " + context.Client.CurrentUser.Username)
 			.WithCustomId("modal_say");

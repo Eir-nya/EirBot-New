@@ -121,7 +121,7 @@ namespace EirBot_New.AppCommands {
 using EirBot_New.Events.Emoji;
 public partial class EmojiCommands : ApplicationCommandsModule {
 	[SlashCommand("Send", "Sends an emoji to the chat as you.", true, false)]
-	public async Task Send(InteractionContext context, [Option("Search", "Text to search for emojis with.")] string search = "") {
+	public static async Task Send(InteractionContext context, [Option("Search", "Text to search for emojis with.")] string search = "") {
 		DiscordInteractionResponseBuilder rb = new DiscordInteractionResponseBuilder()
 			.AsEphemeral()
 			.WithContent("_ _");

@@ -10,7 +10,7 @@ namespace EirBot_New.AppCommands {
 using EirBot_New.Events.Connect4;
 public partial class ContextMenuCommands : ApplicationCommandsModule {
 	[ContextMenu(ApplicationCommandType.User, "Connect4"), ApplicationCommandRequireGuild]
-	public async Task Challenge(ContextMenuContext context) {
+	public static async Task Challenge(ContextMenuContext context) {
 		if (context.TargetUser.IsBot) {
 			await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 				.AsEphemeral()
@@ -26,7 +26,7 @@ public partial class ContextMenuCommands : ApplicationCommandsModule {
 
 public partial class FunCommands : ApplicationCommandsModule {
 	[SlashCommand("connect4", "Play Connect Four with another user.", true, false)]
-	public async Task Connect(InteractionContext context, [Option("Opponent", "Opponent to play against.\nThey will be yellow, you will be red.", false)] DiscordUser opponent) {
+	public static async Task Connect(InteractionContext context, [Option("Opponent", "Opponent to play against.\nThey will be yellow, you will be red.", false)] DiscordUser opponent) {
 		if (opponent.IsBot) {
 			await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 				.AsEphemeral()
