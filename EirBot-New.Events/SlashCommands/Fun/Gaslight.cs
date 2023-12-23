@@ -8,7 +8,7 @@ using DisCatSharp.Interactivity;
 using DisCatSharp.Interactivity.Extensions;
 
 namespace EirBot_New.AppCommands;
-public partial class ContextMenuCommands : ApplicationCommandsModule {
+public partial class ContextMenuCommands : AppCommandGroupBase {
 	[ContextMenu(ApplicationCommandType.Message, "\"Edit\" message"), ApplicationCommandRequirePermissions(Permissions.ManageMessages), ApplicationCommandRequireGuild]
 	public static async Task Command(ContextMenuContext context) {
 		DiscordWebhook? hook = await Util.GetOrCreateWebhook(context.Client, context.Channel);

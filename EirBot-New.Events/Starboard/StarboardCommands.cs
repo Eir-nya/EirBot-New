@@ -7,7 +7,7 @@ using EirBot_New.Serialization;
 
 namespace EirBot_New.AppCommands;
 using EirBot_New.Events.Starboard;
-public partial class StarboardCommands : ApplicationCommandsModule {
+public partial class StarboardCommands : AppCommandGroupBase {
 	[SlashCommand("List", "Lists all config.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels), ApplicationCommandRequireGuild]
 	public static async Task List(InteractionContext context) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());

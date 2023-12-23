@@ -30,7 +30,7 @@ public class TestCommands {
 }
 
 namespace EirBot_New.AppCommands {
-public partial class TestCommands : ApplicationCommandsModule {
+public partial class TestCommands : AppCommandGroupBase {
 	[SlashCommand("Ping", "Sends back \"Pong.\"", true, false)]
 	public static async Task PingPong(InteractionContext context) {
 		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()

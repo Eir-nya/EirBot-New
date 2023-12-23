@@ -6,14 +6,14 @@ using DisCatSharp.Enums;
 
 namespace EirBot_New.AppCommands {
 using EirBot_New.Events;
-public partial class ContextMenuCommands : ApplicationCommandsModule {
+public partial class ContextMenuCommands : AppCommandGroupBase {
 	[ContextMenu(ApplicationCommandType.User, "Pet"), ApplicationCommandRequireGuild]
 	public static async Task PetPet(ContextMenuContext context) {
 		await PetPetCommand.DoPetPet(context, context.TargetUser.AvatarUrl);
 	}
 }
 
-public partial class FunCommands : ApplicationCommandsModule {
+public partial class FunCommands : AppCommandGroupBase {
 	[SlashCommand("Pet", "Pets someone.", true, false), ApplicationCommandRequireGuild]
 	public static async Task PetPet(InteractionContext context, [Option("target", "User to pet.")] DiscordUser target) {
 		await PetPetCommand.DoPetPet(context, target.AvatarUrl);

@@ -1,6 +1,6 @@
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
-// using EirBot_New.Attributes;
+using EirBot_New.AppCommands;
 using System.Reflection;
 
 namespace EirBot_New.Events;
@@ -12,18 +12,11 @@ public class ApplicationCommandsStartup {
 		#endif
 
 		foreach (Type t in Assembly.GetExecutingAssembly().GetTypes())
-			if (t.IsSubclassOf(typeof(ApplicationCommandsModule))) {
+			if (t.IsSubclassOf(typeof(AppCommandGroupBase))) {
 				#if !DEBUG
-				/*
-				GuildOnlyApplicationCommandsAttribute guildOnlyAttr = (GuildOnlyApplicationCommandsAttribute)t.GetCustomAttribute(typeof(GuildOnlyApplicationCommandsAttribute));
-				if (guildOnlyAttr != null) {
-					foreach (ulong id in guildOnlyAttr.guildList)
-						commands.RegisterGuildCommands(t, id);
-				} else
-				*/
 				commands.RegisterGlobalCommands(t);
 				#else
-				commands.RegisterGuildCommands(t, 294341563683831819); // My test erver
+				commands.RegisterGuildCommands(t, 294341563683831819); // My test server
 				#endif
 			}
 	}

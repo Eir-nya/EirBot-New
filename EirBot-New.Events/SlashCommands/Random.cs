@@ -25,7 +25,7 @@ public struct RandomMethods {
 	}
 }
 
-public partial class GenericCommands : ApplicationCommandsModule {
+public partial class GenericCommands : AppCommandGroupBase {
 	[SlashCommand("Flip", "Flip a coin.", true, false)]
 	public static async Task Flip(InteractionContext context) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
@@ -41,7 +41,7 @@ public partial class GenericCommands : ApplicationCommandsModule {
 	// }
 }
 
-public partial class RollCommands : ApplicationCommandsModule {
+public partial class RollCommands : AppCommandGroupBase {
 	[SlashCommand("D4", "Roll one or more D4s.", true, false)]
 	public static async Task D4(InteractionContext context, [Option("number", "Amount of dice to roll.", false), MinimumValue(1), MaximumValue(20)] int number = 1) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);

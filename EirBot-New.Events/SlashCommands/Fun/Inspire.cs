@@ -6,7 +6,7 @@ using DisCatSharp.Enums;
 
 namespace EirBot_New.AppCommands;
 
-public partial class FunCommands : ApplicationCommandsModule {
+public partial class FunCommands : AppCommandGroupBase {
 	private const string INSPIROBOT_URL = "http://inspirobot.me/";
 	private const string INSPIROBOT_API_URL = "http://inspirobot.me/api?generate=true";
 	private const string INSPIROBOT_API_CHRISTMAS_URL = "http://inspirobot.me/api?generate=true&season=xmas";

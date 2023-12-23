@@ -8,7 +8,7 @@ using DisCatSharp.EventArgs;
 
 namespace EirBot_New.AppCommands {
 using EirBot_New.Events.Connect4;
-public partial class ContextMenuCommands : ApplicationCommandsModule {
+public partial class ContextMenuCommands : AppCommandGroupBase {
 	[ContextMenu(ApplicationCommandType.User, "Connect4"), ApplicationCommandRequireGuild]
 	public static async Task Challenge(ContextMenuContext context) {
 		if (context.TargetUser.IsBot) {
@@ -24,7 +24,7 @@ public partial class ContextMenuCommands : ApplicationCommandsModule {
 	}
 }
 
-public partial class FunCommands : ApplicationCommandsModule {
+public partial class FunCommands : AppCommandGroupBase {
 	[SlashCommand("connect4", "Play Connect Four with another user.", true, false), ApplicationCommandRequireGuild]
 	public static async Task Connect(InteractionContext context, [Option("Opponent", "Opponent to play against.\nThey will be yellow, you will be red.", false)] DiscordUser opponent) {
 		if (opponent.IsBot) {
