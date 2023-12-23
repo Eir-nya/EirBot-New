@@ -44,7 +44,7 @@ public partial class TestCommands : ApplicationCommandsModule {
 		);
 	}
 
-	[SlashCommand("SayModal", "Modal test that sends a message as the bot somewhere.", true, false), ApplicationCommandRequireOwner]
+	[SlashCommand("SayModal", "Modal test that sends a message as the bot somewhere.", true, false), ApplicationCommandRequireTeamOwner]
 	public async Task SayModal(InteractionContext context) {
 		DiscordInteractionModalBuilder mb = new DiscordInteractionModalBuilder()
 			.WithTitle("Speak as " + context.Client.CurrentUser.Username)

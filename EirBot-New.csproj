@@ -9,14 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DisCatSharp" Version="10.4.2-nightly-051" />
-    <PackageReference Include="DisCatSharp.Analyzer.Roselyn" Version="6.1.0">
+    <PackageReference Include="DisCatSharp" Version="10.5.0-nightly-007" />
+    <PackageReference Include="DisCatSharp.Analyzer.Roselyn" Version="6.2.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="DisCatSharp.ApplicationCommands" Version="10.4.2-nightly-051" />
-    <PackageReference Include="DisCatSharp.Common" Version="10.4.2-nightly-051" />
-    <PackageReference Include="DisCatSharp.Interactivity" Version="10.4.2-nightly-051" />
+    <PackageReference Include="DisCatSharp.ApplicationCommands" Version="10.5.0-nightly-007" />
+    <PackageReference Include="DisCatSharp.Common" Version="10.5.0-nightly-007" />
+    <PackageReference Include="DisCatSharp.Interactivity" Version="10.5.0-nightly-007" />
   </ItemGroup>
 
 </Project>
