@@ -1,5 +1,6 @@
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
+using EirBot_New.Attributes;
 using System.Reflection;
 
 namespace EirBot_New.Events;
