@@ -36,7 +36,7 @@ public partial class ContextMenuCommands : AppCommandGroupBase {
 		DiscordInteractionModalBuilder mb = new DiscordInteractionModalBuilder()
 			.WithTitle("Speak as " + name)
 			.WithCustomId("modal_say");
-		mb.AddTextComponent(new DiscordTextComponent(TextComponentStyle.Paragraph, "toSay", "New text", name + ": ", 1, 2000, true));
+		mb.AddTextComponent(new DiscordTextComponent(TextComponentStyle.Paragraph, "toSay", "New text", null, 1, 2000, true, context.TargetMessage.Content));
 
 		await context.CreateModalResponseAsync(mb);
 		InteractivityResult<ComponentInteractionCreateEventArgs> result = await context.Client.GetInteractivity().WaitForModalAsync(mb.CustomId);
