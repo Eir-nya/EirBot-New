@@ -142,7 +142,8 @@ public partial class GenericCommands : AppCommandGroupBase {
 		if (string.IsNullOrEmpty(YoutubeEvents.apiKey)) {
 			await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
 				new DiscordInteractionResponseBuilder()
-					.WithContent(":x: Error: Youtube API name or key not set up.")
+					.AsEphemeral()
+					.WithContent(":x: Error: Youtube API key not set up.")
 			);
 			return;
 		}
