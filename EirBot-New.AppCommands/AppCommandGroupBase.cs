@@ -52,7 +52,7 @@ public class AppCommandGroupBase : ApplicationCommandsModule {
 	public override async Task<bool> BeforeSlashExecutionAsync(InteractionContext ctx) {
 		bool requiresGuild = RequireGuild(ctx.CommandName, ctx.SubCommandName, ctx.SubSubCommandName);
 		if (requiresGuild)
-			if (ctx.Guild != null && ctx.Channel.Guild != null) {
+			if (ctx.Guild == null || ctx.Channel.Guild == null) {
 				await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 					.AsEphemeral()
 					.WithContent("Command can only be used in servers.")
@@ -65,7 +65,7 @@ public class AppCommandGroupBase : ApplicationCommandsModule {
 	public override async Task<bool> BeforeContextMenuExecutionAsync(ContextMenuContext ctx) {
 		bool requiresGuild = RequireGuild(ctx.CommandName, ctx.SubCommandName, ctx.SubSubCommandName);
 		if (requiresGuild)
-			if (ctx.Guild != null && ctx.Channel.Guild != null) {
+			if (ctx.Guild == null || ctx.Channel.Guild == null) {
 				await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 					.AsEphemeral()
 					.WithContent("Context menu action can only be used in servers.")
