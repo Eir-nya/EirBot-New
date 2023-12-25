@@ -22,16 +22,6 @@ public partial class TestCommands : AppCommandGroupBase {
 		);
 	}
 
-	[SlashCommand("Shutdown", "Shuts down the bot.", true, false), ApplicationCommandRequireTeamOwner]
-	public static async Task Shutdown(InteractionContext context) {
-		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-			.AsEphemeral()
-			.WithContent("Shutting down!")
-		);
-		Bot b = Bot.GetBot(context.Client);
-		b.Shutdown();
-	}
-
 	[SlashCommand("SayModal", "Modal test that sends a message as the bot somewhere.", true, false), ApplicationCommandRequireTeamOwner]
 	public static async Task SayModal(InteractionContext context) {
 		DiscordInteractionModalBuilder mb = new DiscordInteractionModalBuilder()
