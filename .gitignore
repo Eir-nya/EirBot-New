@@ -1,6 +1,7 @@
-.vscode/*
-bin/*
-obj/*
-data/*
+.vscode/
+bin/
+obj/
+data/
 token.txt
 youtube_api_key.txt
+.vs/
