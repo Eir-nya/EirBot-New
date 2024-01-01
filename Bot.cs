@@ -48,7 +48,6 @@ public class Bot : IDisposable {
 		IReadOnlyDictionary<int, ApplicationCommandsExtension> commands = await client.UseApplicationCommandsAsync(new ApplicationCommandsConfiguration() {
 			// DebugStartup = true,
 			EnableDefaultHelp = false,
-			ManualOverride = true
 		});
 		// Register application commands
 		ApplicationCommandsStartup.Setup(client, commands);
