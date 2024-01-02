@@ -85,7 +85,7 @@ public class StarboardEvents {
 			DiscordMessage newMessage, webhookJumpMessage = null;
 			if (hook != null) {
 				await Util.ModifyWebhookAsync(hook, null, null, starboardChannel.Id);
-				newMessage = await hook.ExecuteAsync(await CreateStarboardMessageWebhook(message, true));
+				newMessage = await hook.ExecuteAsync(await CreateStarboardMessageWebhook(client, message, true));
 				webhookJumpMessage = await hook.ExecuteAsync(await CreateStarboardJumpMessage(client, message, true));
 			} else
 				newMessage = await starboardChannel.SendMessageAsync(await CreateStarboardMessage(client, message, true));
@@ -224,7 +224,7 @@ public class StarboardEvents {
 	private static async Task UpdateStarboardMessage(DiscordClient client, DiscordMessage starredMessage, DiscordMessage starboardMessage, DiscordWebhook? hook) {
 		// Webhook
 		if (hook != null)
-			await hook.EditMessageAsync(starboardMessage.Id, await CreateStarboardMessageWebhook(starredMessage, false));
+			await hook.EditMessageAsync(starboardMessage.Id, await CreateStarboardMessageWebhook(client, starredMessage, false));
 		// No webhook
 		else
 			await starboardMessage.ModifyAsync(await CreateStarboardMessage(client, starredMessage, false));
@@ -287,12 +287,12 @@ public class StarboardEvents {
 	}
 
 	private static async Task<short> CountReactions(DiscordClient client, DiscordMessage message, DiscordChannel channel) {
-		if (message.Channel.Guild == null) {
+		if (message.Guild == null) {
 			message = await Util.GetMessageFixed(message.Id, channel);
-			if (message == null || message.Channel.Guild == null)
+			if (message == null || message.Guild == null)
 				return 0;
 		}
-		DiscordGuild guild = message.Channel.Guild;
+		DiscordGuild guild = message.Guild;
 		StarboardSettings? settings = GetSettings(client, guild);
 		if (settings == null)
 			return 0;
@@ -306,7 +306,7 @@ public class StarboardEvents {
 	}
 
 	// Returns "attachments string" for embedding too-large attachments (>25 MB)
-	private static async Task<(string, Dictionary<string, Stream>)> HandleAttachments(DiscordMessage originalMessage, bool downloadFiles, bool readContent) {
+	private static async Task<(string, Dictionary<string, Stream>)> HandleAttachments(DiscordClient client, DiscordMessage originalMessage, bool downloadFiles, bool readContent) {
 		string attachmentString = readContent ? originalMessage.Content : string.Empty;
 		Dictionary<string, Stream> files = new Dictionary<string, Stream>();
 
@@ -314,7 +314,7 @@ public class StarboardEvents {
 			// Retrieve file
 			if (attachment.FileSize.GetValueOrDefault(0) <= MAX_FILE_SIZE) {
 				if (downloadFiles)
-					files[attachment.Filename] = await new HttpClient().GetStreamAsync(attachment.Url);
+					files[attachment.Filename] = await client.RestClient.GetStreamAsync(attachment.Url);
 			// Add to attachment string
 			} else
 				attachmentString += attachment.Url + "\n";
@@ -328,9 +328,9 @@ public class StarboardEvents {
 	private static async Task<DiscordMessageBuilder> CreateStarboardMessage(DiscordClient client, DiscordMessage message, bool newMessage) {
 		short reactions = await CountReactions(client, message, message.Channel);
 
-		bool hasNonGuildSticker = message.Stickers.Count == 1 && message.Stickers[0].Guild.Id != message.Channel.Guild.Id;
+		bool hasNonGuildSticker = message.Stickers.Count == 1 && (message.Stickers[0].GuildId != message.GuildId || message.Stickers[0].GuildId is null);
 
-		(string, Dictionary<string, Stream>) attachmentData = await HandleAttachments(message, newMessage, false);
+		(string, Dictionary<string, Stream>) attachmentData = await HandleAttachments(client, message, newMessage, false);
 		string attachmentString = attachmentData.Item1;
 		Dictionary<string, Stream> newAttachments = attachmentData.Item2;
 		if (hasNonGuildSticker) {
@@ -355,9 +355,9 @@ public class StarboardEvents {
 		// Attempt to get author's display name in the server
 		string name = message.Author.Username;
 		string avatarURL = message.Author.AvatarUrl;
-		DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
+		DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
 		if (member == null)
-			member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
+			member = await message.Guild.GetMemberAsync(message.Author.Id, true);
 		if (member != null) {
 			if (!string.IsNullOrEmpty(member.DisplayName))
 				name = member.DisplayName;
@@ -367,7 +367,7 @@ public class StarboardEvents {
 
 		return mb
 			.WithEmbed(new DiscordEmbedBuilder()
-				.WithColor(await Util.GetMemberColor(message.Author, message.Channel.Guild))
+				.WithColor(await Util.GetMemberColor(message.Author, message.Guild))
 				.WithTitle("Jump to message")
 				.WithUrl(message.JumpLink)
 				.WithAuthor(name + (message.Author.IsBot ? " [BOT]" : "") + " (⭐x" + reactions + ")", null, avatarURL)
@@ -376,10 +376,10 @@ public class StarboardEvents {
 			);
 	}
 
-	private static async Task<DiscordWebhookBuilder> CreateStarboardMessageWebhook(DiscordMessage message, bool newMessage) {
+	private static async Task<DiscordWebhookBuilder> CreateStarboardMessageWebhook(DiscordClient client, DiscordMessage message, bool newMessage) {
 		bool hasStickerAndFiles = message.Stickers.Count == 1 && message.Attachments.Count > 0;
 
-		(string, Dictionary<string, Stream>) attachmentData = await HandleAttachments(message, newMessage, true);
+		(string, Dictionary<string, Stream>) attachmentData = await HandleAttachments(client, message, newMessage, true);
 		string attachmentString = attachmentData.Item1;
 		Dictionary<string, Stream> newAttachments = attachmentData.Item2;
 		if (hasStickerAndFiles) {
@@ -399,14 +399,14 @@ public class StarboardEvents {
 			if (newAttachments.Count > 0)
 				wb.AddFiles(newAttachments);
 		if (message.Stickers.Count == 1 && !hasStickerAndFiles)
-			wb.AddFile(message.Stickers[0].Name, await new HttpClient().GetStreamAsync(message.Stickers[0].Url), false, message.Stickers[0].Description);
+			wb.AddFile(message.Stickers[0].Name, await client.RestClient.GetStreamAsync(message.Stickers[0].Url), false, message.Stickers[0].Description);
 		if (newMessage) {
 			// Attempt to get author's display name in the server
 			string name = message.Author.Username;
 			string avatarURL = message.Author.AvatarUrl;
-			DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
+			DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
 			if (member == null)
-				member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
+				member = await message.Guild.GetMemberAsync(message.Author.Id, true);
 			if (member != null) {
 				if (!string.IsNullOrEmpty(member.DisplayName))
 					name = member.DisplayName;
@@ -426,9 +426,9 @@ public class StarboardEvents {
 		// Attempt to get author's display name in the server
 		string name = message.Author.Username;
 		string avatarURL = message.Author.AvatarUrl;
-		DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
+		DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
 		if (member == null)
-			member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
+			member = await message.Guild.GetMemberAsync(message.Author.Id, true);
 		if (member != null) {
 			if (!string.IsNullOrEmpty(member.DisplayName))
 				name = member.DisplayName;
@@ -443,7 +443,7 @@ public class StarboardEvents {
 		}
 		return wb
 			.AddEmbed(new DiscordEmbedBuilder()
-				.WithColor(await Util.GetMemberColor(message.Author, message.Channel.Guild))
+				.WithColor(await Util.GetMemberColor(message.Author, message.Guild))
 				.WithTitle("Jump to message")
 				.WithUrl(message.JumpLink)
 				.WithAuthor(name + (message.Author.IsBot ? " [BOT]" : "") + " (⭐x" + reactions + ")", null, avatarURL)
