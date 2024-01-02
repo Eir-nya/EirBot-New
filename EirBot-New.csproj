@@ -19,6 +19,7 @@
     <ProjectReference Include="../DisCatSharp/DisCatSharp.Interactivity/DisCatSharp.Interactivity.csproj" />
     <PackageReference Include="FFmpegArgs.Executes" Version="1.5.2" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.64.0.3205" />
+    <PackageReference Include="newtonsoft.json" Version="13.0.3" />
   </ItemGroup>
 
 </Project>

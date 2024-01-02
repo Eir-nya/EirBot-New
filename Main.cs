@@ -12,7 +12,7 @@ public class Program {
 			Token = File.ReadAllText("token.txt"),
 			TokenType = TokenType.Bot,
 			Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContent,
-			MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Information
+			// MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Information
 		});
 		Bot bot = new Bot(client);
 		await bot.Init();

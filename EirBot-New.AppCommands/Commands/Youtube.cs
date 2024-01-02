@@ -11,8 +11,8 @@ using DisCatSharp;
 using DisCatSharp.EventArgs;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NuGet.Protocol;
 using System.Linq;
 
 [EventHandler]
@@ -118,7 +118,7 @@ public static class YoutubeEvents {
 	}
 
 	private static videoData ParseResult(SearchResult result) {
-		JObject json = JObject.Parse(result.ToJson());
+		JObject json = JObject.Parse(JsonConvert.SerializeObject(result));
 		string title = result.Snippet.Title;
 		string url = YOUTUBE_VIDEO_PREFIX + json["id"]?["videoId"]?.ToString();
 
