@@ -9,14 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../DisCatSharp/DisCatSharp/DisCatSharp.csproj" />
+    <PackageReference Include="DisCatSharp" Version="10.5.0-nightly-015" />
     <PackageReference Include="DisCatSharp.Analyzer.Roselyn" Version="6.2.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <ProjectReference Include="../DisCatSharp/DisCatSharp.ApplicationCommands/DisCatSharp.ApplicationCommands.csproj" />
-    <ProjectReference Include="../DisCatSharp/DisCatSharp.Common/DisCatSharp.Common.csproj" />
-    <ProjectReference Include="../DisCatSharp/DisCatSharp.Interactivity/DisCatSharp.Interactivity.csproj" />
+    <PackageReference Include="DisCatSharp.ApplicationCommands" Version="10.5.0-nightly-015" />
+    <PackageReference Include="DisCatSharp.Common" Version="10.5.0-nightly-015" />
+    <PackageReference Include="DisCatSharp.Interactivity" Version="10.5.0-nightly-015" />
     <PackageReference Include="FFmpegArgs.Executes" Version="1.5.2" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.64.0.3205" />
   </ItemGroup>
