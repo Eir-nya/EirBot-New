@@ -2,6 +2,7 @@ using DisCatSharp;
 using DisCatSharp.Entities;
 
 namespace EirBot_New.Events.Connect4;
+
 public class Connect4Game {
 	private static string EMPTY = ":white_circle:";
 	private static string YELLOW = ":yellow_circle:";
@@ -27,10 +28,10 @@ public class Connect4Game {
 	public DiscordUser yellowPlayer { get; private set; }
 
 	public void Init() {
-		board = new Space[7, 6];
-		for (int col = 0; col < 7; col++)
-			for (int row = 0; row < 6; row++)
-				board[col, row] = Space.EMPTY;
+		this.board = new Space[7, 6];
+		for (var col = 0; col < 7; col++)
+		for (var row = 0; row < 6; row++)
+			this.board[col, row] = Space.EMPTY;
 	}
 
 	public void SetPlayers(DiscordUser redPlayer, DiscordUser yellowPlayer) {
@@ -50,29 +51,29 @@ public class Connect4Game {
 	}
 
 	public DiscordMessageBuilder Display() {
-		string description = "";
-		description += RED + ": " + redPlayer.Mention;
-		if (gameOver && !draw && !nextTurnYellow)
+		var description = "";
+		description += RED + ": " + this.redPlayer.Mention;
+		if (this.gameOver && !this.draw && !this.nextTurnYellow)
 			description += " :confetti_ball:";
 		description += "\n";
-		description += YELLOW + ": " + yellowPlayer.Mention;
-		if (gameOver && !draw && nextTurnYellow)
+		description += YELLOW + ": " + this.yellowPlayer.Mention;
+		if (this.gameOver && !this.draw && this.nextTurnYellow)
 			description += " :confetti_ball:";
 		description += "\n";
-		description += DisplayBoard();
-		DiscordMessageBuilder response = new DiscordMessageBuilder()
+		description += this.DisplayBoard();
+		var response = new DiscordMessageBuilder()
 			.AddEmbed(new DiscordEmbedBuilder()
-				.WithColor(nextTurnYellow ? DiscordColor.Yellow : DiscordColor.Red)
-				.WithAuthor(nextTurnYellow ? yellowPlayer.Username : redPlayer.Username, null, nextTurnYellow ? yellowPlayer.AvatarUrl : redPlayer.AvatarUrl)
+				.WithColor(this.nextTurnYellow ? DiscordColor.Yellow : DiscordColor.Red)
+				.WithAuthor(this.nextTurnYellow ? this.yellowPlayer.Username : this.redPlayer.Username, null, this.nextTurnYellow ? this.yellowPlayer.AvatarUrl : this.redPlayer.AvatarUrl)
 				.WithDescription(description)
-				.WithFooter(StatusMessage(), client.CurrentUser.AvatarUrl)
-				.WithTimestamp(timestamp)
+				.WithFooter(this.StatusMessage(), this.client.CurrentUser.AvatarUrl)
+				.WithTimestamp(this.timestamp)
 			);
 		return response;
 	}
 
 	public int ParseColumn(DiscordEmoji emoji) {
-		switch(emoji.GetDiscordName()) {
+		switch (emoji.GetDiscordName()) {
 			case ":one:":
 				return 0;
 			case ":two:":
@@ -91,47 +92,49 @@ public class Connect4Game {
 			default:
 				break;
 		}
+
 		return -1;
 	}
 
 	private void Eval(int col, int row) {
-		Space color = board[col, row];
-		gameOver = EvalHorizontals(col, row, color);
-		if (!gameOver)
-			gameOver = EvalVerticals(col, row, color);
-		if (!gameOver)
-			gameOver = EvalDiagonals(col, row, color);
+		var color = this.board[col, row];
+		this.gameOver = this.EvalHorizontals(col, row, color);
+		if (!this.gameOver)
+			this.gameOver = this.EvalVerticals(col, row, color);
+		if (!this.gameOver)
+			this.gameOver = this.EvalDiagonals(col, row, color);
 	}
 
 	private bool EvalHorizontals(int col, int row, Space color) {
-		int matchingCount = 0;
-		for (int i = col - 3; i <= col + 3; i++)
-			if (i > -1 && i < 7 && board[i, row] == color) {
+		var matchingCount = 0;
+		for (var i = col - 3; i <= col + 3; i++)
+			if (i > -1 && i < 7 && this.board[i, row] == color) {
 				matchingCount++;
 				if (matchingCount == 4)
 					return true;
 			} else
 				matchingCount = 0;
+
 		return false;
 	}
 
 	private bool EvalVerticals(int col, int row, Space color) {
-		int matchingCount = 0;
-		for (int i = row - 3; i <= row + 3; i++) {
-			if (i > -1 && i < 6 && board[col, i] == color) {
+		var matchingCount = 0;
+		for (var i = row - 3; i <= row + 3; i++)
+			if (i > -1 && i < 6 && this.board[col, i] == color) {
 				matchingCount++;
 				if (matchingCount == 4)
 					return true;
 			} else
 				matchingCount = 0;
-		}
+
 		return false;
 	}
 
 	private bool EvalDiagonals(int col, int row, Space color) {
-		int matchingCount = 0;
-		for (int i = -3; i <= 3; i++)
-			if (col + i > -1 && row + i > -1 && col + i < 7 && row + i < 6 && board[col + i, row + i] == color) {
+		var matchingCount = 0;
+		for (var i = -3; i <= 3; i++)
+			if (col + i > -1 && row + i > -1 && col + i < 7 && row + i < 6 && this.board[col + i, row + i] == color) {
 				matchingCount++;
 				if (matchingCount == 4)
 					return true;
@@ -139,65 +142,66 @@ public class Connect4Game {
 				matchingCount = 0;
 
 		matchingCount = 0;
-		for (int i = -3; i <= 3; i++) {
-			if (col + i > -1 && row - i > -1 && col + i < 7 && row - i < 6 && board[col + i, row - i] == color) {
+		for (var i = -3; i <= 3; i++)
+			if (col + i > -1 && row - i > -1 && col + i < 7 && row - i < 6 && this.board[col + i, row - i] == color) {
 				matchingCount++;
 				if (matchingCount == 4)
 					return true;
 			} else
 				matchingCount = 0;
-		}
+
 		return false;
 	}
 
 	private void UpdateStatus() {
-		draw = true;
-		for (int i = 0; i <= 6; i++)
-			if (ColumnFree(i)) {
-				draw = false;
+		this.draw = true;
+		for (var i = 0; i <= 6; i++)
+			if (this.ColumnFree(i)) {
+				this.draw = false;
 				break;
 			}
-		if (draw)
-			gameOver = true;
-		if (!gameOver)
-			nextTurnYellow = !nextTurnYellow;
+
+		if (this.draw)
+			this.gameOver = true;
+		if (!this.gameOver)
+			this.nextTurnYellow = !this.nextTurnYellow;
 	}
 
 	private string DisplayBoard() {
-		string boardString = "";
-		for (int row = 5; row >= 0; row--) {
-			for (int col = 0; col < 7; col++)
-				boardString += GetSpaceCharacter(board[col, row]);
+		var boardString = "";
+		for (var row = 5; row >= 0; row--) {
+			for (var col = 0; col < 7; col++)
+				boardString += this.GetSpaceCharacter(this.board[col, row]);
 			if (row > 0)
 				boardString += "\n";
 		}
+
 		return boardString;
 	}
 
 	private string StatusMessage() {
-		if (gameOver)
-			if (!draw)
-				return String.Format("{0} won!", (nextTurnYellow ? yellowPlayer : redPlayer).Username);
+		if (this.gameOver)
+			if (!this.draw)
+				return string.Format("{0} won!", (this.nextTurnYellow ? this.yellowPlayer : this.redPlayer).Username);
 			else
 				return "It's a draw.";
 		else
-			return String.Format("{0}'s turn.", (nextTurnYellow ? yellowPlayer : redPlayer).Username);
+			return string.Format("{0}'s turn.", (this.nextTurnYellow ? this.yellowPlayer : this.redPlayer).Username);
 	}
 
-	public bool ColumnFree(int col) {
-		return board[col, 5] == Space.EMPTY;
-	}
+	public bool ColumnFree(int col) =>
+		this.board[col, 5] == Space.EMPTY;
 
 	public void Place(int col) {
-		Space color = nextTurnYellow ? Space.YELLOW : Space.RED;
+		var color = this.nextTurnYellow ? Space.YELLOW : Space.RED;
 
-		for (int bottomMost = 0; bottomMost < 6; bottomMost++)
-			if (board[col, bottomMost] == Space.EMPTY) {
-				board[col, bottomMost] = color;
-				Eval(col, bottomMost);
+		for (var bottomMost = 0; bottomMost < 6; bottomMost++)
+			if (this.board[col, bottomMost] == Space.EMPTY) {
+				this.board[col, bottomMost] = color;
+				this.Eval(col, bottomMost);
 				break;
 			}
 
-		UpdateStatus();
+		this.UpdateStatus();
 	}
 }

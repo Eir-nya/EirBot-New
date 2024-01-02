@@ -3,36 +3,37 @@ using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
+
 using System.Reflection;
 
 namespace EirBot_New.AppCommands;
 
 public class AppCommandGroupBase : ApplicationCommandsModule {
 	private static MethodInfo? FetchAppCommandByName(string name, string subName, string subSubName) {
-		foreach (Type t in Assembly.GetExecutingAssembly().GetTypes()) {
+		foreach (var t in Assembly.GetExecutingAssembly().GetTypes()) {
 			// Look for SlashCommandGroup if it exists, assume this is "name"
-			SlashCommandGroupAttribute? sCGAttr = t.GetCustomAttribute<SlashCommandGroupAttribute>();
+			var sCGAttr = t.GetCustomAttribute<SlashCommandGroupAttribute>();
 			if (sCGAttr != null && sCGAttr.Name == name) {
 				// Look for a nested type, 1 layer down.
-				if (!string.IsNullOrEmpty(subSubName)) {
-					foreach (Type t2 in t.GetNestedTypes())
-						foreach (MethodInfo mi in t2.GetMethods()) {
-							SlashCommandAttribute? sCAttr = mi.GetCustomAttribute<SlashCommandAttribute>();
-							if (sCAttr != null && sCAttr.Name == subSubName)
-								return mi;
-						}
+				if (!string.IsNullOrEmpty(subSubName))
+					foreach (var t2 in t.GetNestedTypes())
+					foreach (var mi in t2.GetMethods()) {
+						var sCAttr = mi.GetCustomAttribute<SlashCommandAttribute>();
+						if (sCAttr != null && sCAttr.Name == subSubName)
+							return mi;
+					}
 				// Otherwise, look for method here
-				} else
-					foreach (MethodInfo mi in t.GetMethods()) {
-						SlashCommandAttribute? sCAttr = mi.GetCustomAttribute<SlashCommandAttribute>();
+				else
+					foreach (var mi in t.GetMethods()) {
+						var sCAttr = mi.GetCustomAttribute<SlashCommandAttribute>();
 						if (sCAttr != null && sCAttr.Name == subName)
 							return mi;
 					}
 			}
 			// Otherwise, just look for "name" as an immediate child
 			else
-				foreach (MethodInfo mi in t.GetMethods()) {
-					SlashCommandAttribute? sCAttr = mi.GetCustomAttribute<SlashCommandAttribute>();
+				foreach (var mi in t.GetMethods()) {
+					var sCAttr = mi.GetCustomAttribute<SlashCommandAttribute>();
 					if (sCAttr != null && sCAttr.Name == name)
 						return mi;
 				}
@@ -42,15 +43,14 @@ public class AppCommandGroupBase : ApplicationCommandsModule {
 	}
 
 	private static bool RequireGuild(string name, string subName, string subSubName) {
-		MethodInfo? mi = FetchAppCommandByName(name, subName, subSubName);
+		var mi = FetchAppCommandByName(name, subName, subSubName);
 
 		return mi != null && mi.GetCustomAttribute<ApplicationCommandRequireGuildAttribute>() != null;
 	}
 
 	///
-
-	public override async Task<bool> BeforeSlashExecutionAsync(InteractionContext ctx) {
-		bool requiresGuild = RequireGuild(ctx.CommandName, ctx.SubCommandName, ctx.SubSubCommandName);
+	public async override Task<bool> BeforeSlashExecutionAsync(InteractionContext ctx) {
+		var requiresGuild = RequireGuild(ctx.CommandName, ctx.SubCommandName, ctx.SubSubCommandName);
 		if (requiresGuild)
 			if (ctx.Guild == null || ctx.Channel.Guild == null) {
 				await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
@@ -59,11 +59,12 @@ public class AppCommandGroupBase : ApplicationCommandsModule {
 				);
 				return false;
 			}
+
 		return true;
 	}
 
-	public override async Task<bool> BeforeContextMenuExecutionAsync(ContextMenuContext ctx) {
-		bool requiresGuild = RequireGuild(ctx.CommandName, ctx.SubCommandName, ctx.SubSubCommandName);
+	public async override Task<bool> BeforeContextMenuExecutionAsync(ContextMenuContext ctx) {
+		var requiresGuild = RequireGuild(ctx.CommandName, ctx.SubCommandName, ctx.SubSubCommandName);
 		if (requiresGuild)
 			if (ctx.Guild == null || ctx.Channel.Guild == null) {
 				await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
@@ -72,6 +73,7 @@ public class AppCommandGroupBase : ApplicationCommandsModule {
 				);
 				return false;
 			}
+
 		return true;
 	}
 }

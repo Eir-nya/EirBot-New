@@ -3,64 +3,66 @@ using DisCatSharp.ApplicationCommands;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Interactivity.Extensions;
+
 using EirBot_New.Events;
 using EirBot_New.Serialization;
+
 using System.Reflection;
 
 namespace EirBot_New;
+
 public class Bot : IDisposable {
 	private readonly DiscordShardedClient client;
-	public BotDataCollection savedData = new BotDataCollection();
+	public BotDataCollection savedData = new();
 
-	public static Dictionary<DiscordClient, Bot> botInstances = new Dictionary<DiscordClient, Bot>();
-	public static Bot GetBot(DiscordClient cli) { return botInstances[cli]; }
+	public static Dictionary<DiscordClient, Bot> botInstances = new();
+
+	public static Bot GetBot(DiscordClient cli) =>
+		botInstances[cli];
 
 	public Bot(DiscordShardedClient client) {
 		this.client = client;
 	}
 
 	public async Task Init() {
-		client.GuildDownloadCompleted += async (cli, e) => await Register(cli, this);
-		await RegisterEvents(client);
-		client.GuildDownloadCompleted += SetInitialStatus;
-		await client.StartAsync();
+		this.client.GuildDownloadCompleted += async (cli, e) => await Register(cli, this);
+		await RegisterEvents(this.client);
+		this.client.GuildDownloadCompleted += SetInitialStatus;
+		await this.client.StartAsync();
 		await Task.Delay(-1);
 	}
 
 	public void Dispose() {
-		foreach (DiscordClient disClient in client.ShardClients.Values)
+		foreach (var disClient in this.client.ShardClients.Values)
 			disClient.Dispose();
 		GC.SuppressFinalize(this);
 		Environment.Exit(0);
 	}
 
-	public static async Task Register(DiscordClient cli, Bot b) {
-		await Task.Run(() => {
-			botInstances[cli] = b;
-		});
+	public async static Task Register(DiscordClient cli, Bot b) {
+		await Task.Run(() => { botInstances[cli] = b; });
 	}
 
-	public static async Task SetInitialStatus(DiscordClient client, GuildDownloadCompletedEventArgs args) {
-		await client.UpdateStatusAsync(new DiscordActivity("with code", ActivityType.Playing));
+	public async static Task SetInitialStatus(DiscordClient client, GuildDownloadCompletedEventArgs args) {
+		await client.UpdateStatusAsync(new("with code", ActivityType.Playing));
 	}
 
-	public static async Task RegisterEvents(DiscordShardedClient client) {
-		IReadOnlyDictionary<int, ApplicationCommandsExtension> commands = await client.UseApplicationCommandsAsync(new ApplicationCommandsConfiguration() {
+	public async static Task RegisterEvents(DiscordShardedClient client) {
+		var commands = await client.UseApplicationCommandsAsync(new() {
 			// DebugStartup = true,
-			EnableDefaultHelp = false,
+			EnableDefaultHelp = false
 		});
 		// Register application commands
 		ApplicationCommandsStartup.Setup(client, commands);
 
 		HashSet<Task> tasks = new();
-		foreach (DiscordClient cli in client.ShardClients.Values) {
+		foreach (var cli in client.ShardClients.Values)
 			tasks.Add(Task.Run(() => {
 				// Register event handlers
 				cli.RegisterEventHandlers(Assembly.GetExecutingAssembly());
 				// Register interactivity
 				cli.UseInteractivity();
 			}));
-		}
 		await Task.WhenAll(tasks);
 
 		/*
