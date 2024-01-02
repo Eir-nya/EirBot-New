@@ -47,8 +47,7 @@ public class Bot : IDisposable {
 	public static async Task RegisterEvents(DiscordShardedClient client) {
 		IReadOnlyDictionary<int, ApplicationCommandsExtension> commands = await client.UseApplicationCommandsAsync(new ApplicationCommandsConfiguration() {
 			// DebugStartup = true,
-			EnableDefaultHelp = false,
-			ManualOverride = true
+			EnableDefaultHelp = false
 		});
 		// Register application commands
 		ApplicationCommandsStartup.Setup(client, commands);
