@@ -16,13 +16,13 @@ public class StarboardEvents {
 
 	// Initializes star emoji
 	[Event(DiscordEvent.Ready)]
-	public static async Task Ready(DiscordClient client, ReadyEventArgs args) {
+	public async Task Ready(DiscordClient client, ReadyEventArgs args) {
 		starEmoji = DiscordEmoji.FromName(client, ":star:");
 	}
 
 	// Reaction added: add to starboard and update
 	[Event(DiscordEvent.MessageReactionAdded)]
-	public static async Task ReactionAdded(DiscordClient client, MessageReactionAddEventArgs args) {
+	public async Task ReactionAdded(DiscordClient client, MessageReactionAddEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
 		if (args.Emoji != starEmoji)
@@ -102,7 +102,7 @@ public class StarboardEvents {
 
 	// Reaction removed: remove from starboard or update
 	[Event(DiscordEvent.MessageReactionRemoved)]
-	public static async Task ReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs args) {
+	public async Task ReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
 		if (args.Emoji != starEmoji)
@@ -152,7 +152,7 @@ public class StarboardEvents {
 	}
 
 	[Event(DiscordEvent.MessageUpdated)]
-	public static async Task MessageUpdated(DiscordClient client, MessageUpdateEventArgs args) {
+	public async Task MessageUpdated(DiscordClient client, MessageUpdateEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
 		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
@@ -189,7 +189,7 @@ public class StarboardEvents {
 	}
 
 	[Event(DiscordEvent.MessageDeleted)]
-	public static async Task MessageRemoved(DiscordClient client, MessageDeleteEventArgs args) {
+	public async Task MessageRemoved(DiscordClient client, MessageDeleteEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
 		StarboardSettings? settings = GetSettings(client, args.Guild);
