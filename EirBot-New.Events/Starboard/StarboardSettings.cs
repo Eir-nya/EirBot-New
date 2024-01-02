@@ -12,16 +12,16 @@ public struct StarboardSettings {
 	public bool useWebhook;
 
 	public ulong channelID = 0;
-	public Dictionary<ulong, ulong> messageLookup = new Dictionary<ulong, ulong>();
-	public Dictionary<ulong, ulong> webhookJumpMessageLookup = new Dictionary<ulong, ulong>();
-	public List<ulong> ignoredChannels = new List<ulong>();
+	public Dictionary<ulong, ulong> messageLookup = new();
+	public Dictionary<ulong, ulong> webhookJumpMessageLookup = new();
+	public List<ulong> ignoredChannels = new();
 
 	public StarboardSettings() {
-		minStars = 2;
-		allowNSFW = false;
-		allowSelfStar = false;
-		removeWhenDeleted = true;
-		removeWhenUnstarred = true;
-		useWebhook = true;
+		this.minStars = 2;
+		this.allowNSFW = false;
+		this.allowSelfStar = false;
+		this.removeWhenDeleted = true;
+		this.removeWhenUnstarred = true;
+		this.useWebhook = true;
 	}
 }

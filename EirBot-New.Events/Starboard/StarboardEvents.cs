@@ -2,7 +2,9 @@ using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
+
 using EirBot_New.Serialization;
+
 using System.Net;
 
 namespace EirBot_New.Events.Starboard;
@@ -16,26 +18,28 @@ public class StarboardEvents {
 
 	// Initializes star emoji
 	[Event(DiscordEvent.Ready)]
-	public static async Task Ready(DiscordClient client, ReadyEventArgs args) {
+	public async static Task Ready(DiscordClient client, ReadyEventArgs args) {
 		starEmoji = DiscordEmoji.FromName(client, ":star:");
 	}
 
 	// Reaction added: add to starboard and update
 	[Event(DiscordEvent.MessageReactionAdded)]
-	public static async Task ReactionAdded(DiscordClient client, MessageReactionAddEventArgs args) {
+	public async static Task ReactionAdded(DiscordClient client, MessageReactionAddEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
 		if (args.Emoji != starEmoji)
 			return;
-		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
+
+		var message = await Util.VerifyMessage(args.Message, args.Channel);
 		// if (args.Message.Author == client.CurrentUser)
 		// 	return;
-		StarboardSettings? settings = GetSettings(client, args.Guild);
+		var settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
 		if (args.Channel.IsNsfw && !settings.Value.allowNSFW)
 			return;
-		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
+
+		var starboardChannel = GetStarboardChannel(client, args.Guild);
 		if (starboardChannel == null)
 			return;
 		if (settings.Value.ignoredChannels.Contains(args.Channel.Id))
@@ -51,36 +55,42 @@ public class StarboardEvents {
 		// Message already exists, but its webhook status is not what we want, so delete it
 		if (settings.Value.messageLookup.ContainsKey(message.Id)) {
 			// Get starboard message, if it already exists
-			DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
+			var starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
 			DiscordMessage? starboardJumpMessage = null;
 			if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
 				starboardJumpMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, true);
 			if (starboardMessage != null)
 				if (starboardMessage.WebhookMessage != (settings.Value.useWebhook && await Util.CheckWebhookPerms(client, starboardChannel))) {
 					settings.Value.messageLookup.Remove(message.Id);
-					try { await starboardMessage.DeleteAsync(); } catch {}
+					try {
+						await starboardMessage.DeleteAsync();
+					} catch { }
 				}
+
 			if (starboardJumpMessage != null)
 				if (!settings.Value.useWebhook) {
 					settings.Value.webhookJumpMessageLookup.Remove(message.Id);
-					try { await starboardJumpMessage.DeleteAsync(); } catch {}
+					try {
+						await starboardJumpMessage.DeleteAsync();
+					} catch { }
 				}
 		}
 
 		// Message already exists - update star count
 		if (settings.Value.messageLookup.ContainsKey(message.Id)) {
 			// Get starboard message, if it already exists
-			DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
+			var starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
 			DiscordMessage? starboardJumpMessage = null;
 			if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
 				starboardJumpMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, true);
 			if (starboardMessage == null)
 				return;
+
 			if (settings.Value.useWebhook && hook != null)
 				await UpdateStarboardJumpMessage(client, message, starboardJumpMessage, hook);
 			else
 				await UpdateStarboardMessage(client, message, starboardMessage, hook);
-		// Message doesn't exist - create it
+			// Message doesn't exist - create it
 		} else {
 			DiscordMessage newMessage, webhookJumpMessage = null;
 			if (hook != null) {
@@ -93,29 +103,32 @@ public class StarboardEvents {
 			settings.Value.messageLookup[message.Id] = newMessage.Id;
 			if (webhookJumpMessage != null)
 				settings.Value.webhookJumpMessageLookup[message.Id] = webhookJumpMessage.Id;
-			ServerData? serverData = ServerData.GetServerData(client, args.Guild);
+			var serverData = ServerData.GetServerData(client, args.Guild);
 			if (serverData == null)
 				return;
+
 			serverData.Save();
 		}
 	}
 
 	// Reaction removed: remove from starboard or update
 	[Event(DiscordEvent.MessageReactionRemoved)]
-	public static async Task ReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs args) {
+	public async static Task ReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
 		if (args.Emoji != starEmoji)
 			return;
-		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
+
+		var message = await Util.VerifyMessage(args.Message, args.Channel);
 		// if (message.Author == client.CurrentUser)
 		// 	return;
-		StarboardSettings? settings = GetSettings(client, args.Guild);
+		var settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
 		if (args.Channel.IsNsfw && !settings.Value.allowNSFW)
 			return;
-		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
+
+		var starboardChannel = GetStarboardChannel(client, args.Guild);
 		if (starboardChannel == null)
 			return;
 		if (!settings.Value.messageLookup.ContainsKey(message.Id))
@@ -129,14 +142,15 @@ public class StarboardEvents {
 			hook = await Util.GetWebhook(client, starboardChannel);
 
 		// Get starboard message, if it already exists
-		DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
-		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await Util.CheckWebhookPerms(client, starboardChannel))))
+		var starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
+		if (starboardMessage == null || starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await Util.CheckWebhookPerms(client, starboardChannel)))
 			return;
+
 		DiscordMessage? starboardJumpMessage = null;
 		if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
 			starboardJumpMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, true);
 
-		short reactions = await CountReactions(client, message, args.Channel);
+		var reactions = await CountReactions(client, message, args.Channel);
 
 		// Fell below minimum stars - remove
 		if (reactions < settings.Value.minStars && settings.Value.removeWhenUnstarred) {
@@ -152,18 +166,21 @@ public class StarboardEvents {
 	}
 
 	[Event(DiscordEvent.MessageUpdated)]
-	public static async Task MessageUpdated(DiscordClient client, MessageUpdateEventArgs args) {
+	public async static Task MessageUpdated(DiscordClient client, MessageUpdateEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
-		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
+
+		var message = await Util.VerifyMessage(args.Message, args.Channel);
 		if (message.Author == client.CurrentUser)
 			return;
-		StarboardSettings? settings = GetSettings(client, args.Guild);
+
+		var settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
 		if (args.Channel.IsNsfw && !settings.Value.allowNSFW)
 			return;
-		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
+
+		var starboardChannel = GetStarboardChannel(client, args.Guild);
 		if (starboardChannel == null)
 			return;
 		if (!settings.Value.messageLookup.ContainsKey(message.Id))
@@ -177,9 +194,10 @@ public class StarboardEvents {
 			hook = await Util.GetWebhook(client, starboardChannel);
 
 		// Get starboard message, if it already exists
-		DiscordMessage? starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
-		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await Util.CheckWebhookPerms(client, starboardChannel))))
+		var starboardMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, false);
+		if (starboardMessage == null || starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await Util.CheckWebhookPerms(client, starboardChannel)))
 			return;
+
 		DiscordMessage? starboardJumpMessage = null;
 		if (settings.Value.webhookJumpMessageLookup.ContainsKey(message.Id))
 			starboardJumpMessage = await GetStarboardMessage(client, message.Id, settings.Value, starboardChannel, hook, true);
@@ -189,15 +207,17 @@ public class StarboardEvents {
 	}
 
 	[Event(DiscordEvent.MessageDeleted)]
-	public static async Task MessageRemoved(DiscordClient client, MessageDeleteEventArgs args) {
+	public async static Task MessageRemoved(DiscordClient client, MessageDeleteEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
-		StarboardSettings? settings = GetSettings(client, args.Guild);
+
+		var settings = GetSettings(client, args.Guild);
 		if (settings == null)
 			return;
 		if (args.Channel.IsNsfw && !settings.Value.allowNSFW)
 			return;
-		DiscordChannel? starboardChannel = GetStarboardChannel(client, args.Guild);
+
+		var starboardChannel = GetStarboardChannel(client, args.Guild);
 		if (starboardChannel == null)
 			return;
 		if (!settings.Value.messageLookup.ContainsKey(args.Message.Id))
@@ -208,9 +228,10 @@ public class StarboardEvents {
 		if (settings.Value.useWebhook)
 			hook = await Util.GetWebhook(client, starboardChannel);
 
-		DiscordMessage? starboardMessage = await GetStarboardMessage(client, args.Message.Id, settings.Value, starboardChannel, hook, false);
-		if (starboardMessage == null || (starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await Util.CheckWebhookPerms(client, starboardChannel))))
+		var starboardMessage = await GetStarboardMessage(client, args.Message.Id, settings.Value, starboardChannel, hook, false);
+		if (starboardMessage == null || starboardMessage.WebhookMessage && (!settings.Value.useWebhook || !await Util.CheckWebhookPerms(client, starboardChannel)))
 			return;
+
 		DiscordMessage? starboardJumpMessage = null;
 		if (settings.Value.webhookJumpMessageLookup.ContainsKey(args.Message.Id))
 			starboardJumpMessage = await GetStarboardMessage(client, args.Message.Id, settings.Value, starboardChannel, hook, true);
@@ -220,8 +241,7 @@ public class StarboardEvents {
 			await DeleteStarboardMessage(client, starboardMessage, starboardJumpMessage, args.Message.Id, settings.Value, args.Guild, hook);
 	}
 
-
-	private static async Task UpdateStarboardMessage(DiscordClient client, DiscordMessage starredMessage, DiscordMessage starboardMessage, DiscordWebhook? hook) {
+	private async static Task UpdateStarboardMessage(DiscordClient client, DiscordMessage starredMessage, DiscordMessage starboardMessage, DiscordWebhook? hook) {
 		// Webhook
 		if (hook != null)
 			await hook.EditMessageAsync(starboardMessage.Id, await CreateStarboardMessageWebhook(starredMessage, false));
@@ -230,120 +250,126 @@ public class StarboardEvents {
 			await starboardMessage.ModifyAsync(await CreateStarboardMessage(client, starredMessage, false));
 	}
 
-	private static async Task UpdateStarboardJumpMessage(DiscordClient client, DiscordMessage starredMessage, DiscordMessage starboardJumpMessage, DiscordWebhook hook) {
+	private async static Task UpdateStarboardJumpMessage(DiscordClient client, DiscordMessage starredMessage, DiscordMessage starboardJumpMessage, DiscordWebhook hook) {
 		await hook.EditMessageAsync(starboardJumpMessage.Id, await CreateStarboardJumpMessage(client, starredMessage, false));
 	}
 
-	private static async Task DeleteStarboardMessage(DiscordClient client, DiscordMessage starboardMessage, DiscordMessage starboardJumpMessage, ulong starredMessageID, StarboardSettings settings, DiscordGuild guild, DiscordWebhook? hook) {
+	private async static Task DeleteStarboardMessage(DiscordClient client, DiscordMessage starboardMessage, DiscordMessage starboardJumpMessage, ulong starredMessageID, StarboardSettings settings, DiscordGuild guild, DiscordWebhook? hook) {
 		if (hook != null) {
 			await hook.DeleteMessageAsync(starboardMessage.Id);
 			await hook.DeleteMessageAsync(starboardJumpMessage.Id);
 		} else
 			await starboardMessage.DeleteAsync();
+
 		settings.messageLookup.Remove(starredMessageID);
-		ServerData? serverData = ServerData.GetServerData(client, guild);
+		var serverData = ServerData.GetServerData(client, guild);
 		if (serverData == null)
 			return;
+
 		serverData.Save();
 	}
 
-	private static async Task<DiscordMessage?> GetStarboardMessage(DiscordClient client, ulong starredMessageID, StarboardSettings settings, DiscordChannel starboardChannel, DiscordWebhook? hook, bool jumpMessage) {
+	private async static Task<DiscordMessage?> GetStarboardMessage(DiscordClient client, ulong starredMessageID, StarboardSettings settings, DiscordChannel starboardChannel, DiscordWebhook? hook, bool jumpMessage) {
 		DiscordMessage? starboardMessage = null;
 		// Webhook
 		if (hook != null)
 			try {
 				starboardMessage = await hook.GetMessageAsync((jumpMessage ? settings.webhookJumpMessageLookup : settings.messageLookup)[starredMessageID]);
-			} catch {}
+			} catch { }
 		// No webhook
 		else
 			try {
 				starboardMessage = await Util.GetMessageFixed((jumpMessage ? settings.webhookJumpMessageLookup : settings.messageLookup)[starredMessageID], starboardChannel);
-			} catch {}
+			} catch { }
+
 		if (starboardMessage != null)
 			return starboardMessage;
+
 		// Remove missing starboard message from message lookup
 		(jumpMessage ? settings.webhookJumpMessageLookup : settings.messageLookup).Remove(starredMessageID);
-		ServerData? serverData = ServerData.GetServerData(client, starboardChannel.Guild);
+		var serverData = ServerData.GetServerData(client, starboardChannel.Guild);
 		if (serverData == null)
 			return null;
+
 		serverData.Save();
 		return null;
 	}
 
-
-
 	public static StarboardSettings? GetSettings(DiscordClient client, DiscordGuild guild) {
-		ServerData? serverData = ServerData.GetServerData(client, guild);
+		var serverData = ServerData.GetServerData(client, guild);
 		if (serverData == null)
 			return null;
+
 		return serverData.starboardSettings;
 	}
 
 	private static DiscordChannel? GetStarboardChannel(DiscordClient client, DiscordGuild guild) {
-		StarboardSettings? settings = GetSettings(client, guild);
+		var settings = GetSettings(client, guild);
 		if (settings == null)
 			return null;
+
 		return guild.GetChannel(settings.Value.channelID);
 	}
 
-	private static async Task<short> CountReactions(DiscordClient client, DiscordMessage message, DiscordChannel channel) {
+	private async static Task<short> CountReactions(DiscordClient client, DiscordMessage message, DiscordChannel channel) {
 		if (message.Channel.Guild == null) {
 			message = await Util.GetMessageFixed(message.Id, channel);
 			if (message == null || message.Channel.Guild == null)
 				return 0;
 		}
-		DiscordGuild guild = message.Channel.Guild;
-		StarboardSettings? settings = GetSettings(client, guild);
+
+		var guild = message.Channel.Guild;
+		var settings = GetSettings(client, guild);
 		if (settings == null)
 			return 0;
 
 		short count = 0;
-		IReadOnlyList<DiscordUser> reacters = await message.GetReactionsAsync(starEmoji);
-		foreach (DiscordUser user in reacters)
+		var reacters = await message.GetReactionsAsync(starEmoji);
+		foreach (var user in reacters)
 			if (user != message.Author || settings.Value.allowSelfStar)
 				count++;
 		return count;
 	}
 
 	// Returns "attachments string" for embedding too-large attachments (>25 MB)
-	private static async Task<(string, Dictionary<string, Stream>)> HandleAttachments(DiscordMessage originalMessage, bool downloadFiles, bool readContent) {
-		string attachmentString = readContent ? originalMessage.Content : string.Empty;
-		Dictionary<string, Stream> files = new Dictionary<string, Stream>();
+	private async static Task<(string, Dictionary<string, Stream>)> HandleAttachments(DiscordMessage originalMessage, bool downloadFiles, bool readContent) {
+		var attachmentString = readContent ? originalMessage.Content : string.Empty;
+		Dictionary<string, Stream> files = new();
 
-		foreach (DiscordAttachment attachment in originalMessage.Attachments) {
+		foreach (var attachment in originalMessage.Attachments)
 			// Retrieve file
 			if (attachment.FileSize.GetValueOrDefault(0) <= MAX_FILE_SIZE) {
 				if (downloadFiles)
 					files[attachment.Filename] = await new HttpClient().GetStreamAsync(attachment.Url);
-			// Add to attachment string
+				// Add to attachment string
 			} else
 				attachmentString += attachment.Url + "\n";
-		}
+
 		if (attachmentString.EndsWith("\n"))
 			attachmentString = attachmentString.Substring(0, attachmentString.Length - 2);
 
 		return (attachmentString, files);
 	}
 
-	private static async Task<DiscordMessageBuilder> CreateStarboardMessage(DiscordClient client, DiscordMessage message, bool newMessage) {
-		short reactions = await CountReactions(client, message, message.Channel);
+	private async static Task<DiscordMessageBuilder> CreateStarboardMessage(DiscordClient client, DiscordMessage message, bool newMessage) {
+		var reactions = await CountReactions(client, message, message.Channel);
 
-		bool hasNonGuildSticker = message.Stickers.Count == 1 && message.Stickers[0].Guild.Id != message.Channel.Guild.Id;
+		var hasNonGuildSticker = message.Stickers.Count == 1 && message.Stickers[0].Guild.Id != message.Channel.Guild.Id;
 
 		(string, Dictionary<string, Stream>) attachmentData = await HandleAttachments(message, newMessage, false);
-		string attachmentString = attachmentData.Item1;
+		var attachmentString = attachmentData.Item1;
 		Dictionary<string, Stream> newAttachments = attachmentData.Item2;
 		if (hasNonGuildSticker) {
-			string toAdd = "\n" + message.Stickers[0].Url;
+			var toAdd = "\n" + message.Stickers[0].Url;
 			if (attachmentString.Length + toAdd.Length > 2000 - 10)
 				toAdd = "\n:warning:";
 			attachmentString += toAdd;
 		}
 
-		DiscordMessageBuilder mb = new DiscordMessageBuilder()
+		var mb = new DiscordMessageBuilder()
 			.WithContent(attachmentString)
 			.KeepAttachments(true);
-		foreach (DiscordEmbed e in message.Embeds)
+		foreach (var e in message.Embeds)
 			if (e.Url == null || !attachmentString.Contains(e.Url.OriginalString))
 				mb.AddEmbed(e);
 		if (newMessage)
@@ -353,9 +379,9 @@ public class StarboardEvents {
 			mb.WithSticker(message.Stickers[0]);
 
 		// Attempt to get author's display name in the server
-		string name = message.Author.Username;
-		string avatarURL = message.Author.AvatarUrl;
-		DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
+		var name = message.Author.Username;
+		var avatarURL = message.Author.AvatarUrl;
+		var member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
 		if (member == null)
 			member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
 		if (member != null) {
@@ -376,23 +402,23 @@ public class StarboardEvents {
 			);
 	}
 
-	private static async Task<DiscordWebhookBuilder> CreateStarboardMessageWebhook(DiscordMessage message, bool newMessage) {
-		bool hasStickerAndFiles = message.Stickers.Count == 1 && message.Attachments.Count > 0;
+	private async static Task<DiscordWebhookBuilder> CreateStarboardMessageWebhook(DiscordMessage message, bool newMessage) {
+		var hasStickerAndFiles = message.Stickers.Count == 1 && message.Attachments.Count > 0;
 
 		(string, Dictionary<string, Stream>) attachmentData = await HandleAttachments(message, newMessage, true);
-		string attachmentString = attachmentData.Item1;
+		var attachmentString = attachmentData.Item1;
 		Dictionary<string, Stream> newAttachments = attachmentData.Item2;
 		if (hasStickerAndFiles) {
-			string toAdd = "\n" + message.Stickers[0].Url;
+			var toAdd = "\n" + message.Stickers[0].Url;
 			if (attachmentString.Length + toAdd.Length > 2000 - 10)
 				toAdd = "\n:warning:";
 			attachmentString += toAdd;
 		}
 
-		DiscordWebhookBuilder wb = new DiscordWebhookBuilder()
+		var wb = new DiscordWebhookBuilder()
 			.WithContent(attachmentString)
 			.KeepAttachments(true);
-		foreach (DiscordEmbed e in message.Embeds)
+		foreach (var e in message.Embeds)
 			if (e.Url == null || !attachmentString.Contains(e.Url.OriginalString))
 				wb.AddEmbed(e);
 		if (newMessage)
@@ -402,9 +428,9 @@ public class StarboardEvents {
 			wb.AddFile(message.Stickers[0].Name, await new HttpClient().GetStreamAsync(message.Stickers[0].Url), false, message.Stickers[0].Description);
 		if (newMessage) {
 			// Attempt to get author's display name in the server
-			string name = message.Author.Username;
-			string avatarURL = message.Author.AvatarUrl;
-			DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
+			var name = message.Author.Username;
+			var avatarURL = message.Author.AvatarUrl;
+			var member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
 			if (member == null)
 				member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
 			if (member != null) {
@@ -417,16 +443,17 @@ public class StarboardEvents {
 			wb.Username = name;
 			wb.AvatarUrl = avatarURL;
 		}
+
 		return wb;
 	}
 
-	private static async Task<DiscordWebhookBuilder> CreateStarboardJumpMessage(DiscordClient client, DiscordMessage message, bool newMessage) {
-		short reactions = await CountReactions(client, message, message.Channel);
+	private async static Task<DiscordWebhookBuilder> CreateStarboardJumpMessage(DiscordClient client, DiscordMessage message, bool newMessage) {
+		var reactions = await CountReactions(client, message, message.Channel);
 
 		// Attempt to get author's display name in the server
-		string name = message.Author.Username;
-		string avatarURL = message.Author.AvatarUrl;
-		DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
+		var name = message.Author.Username;
+		var avatarURL = message.Author.AvatarUrl;
+		var member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
 		if (member == null)
 			member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
 		if (member != null) {
@@ -436,11 +463,12 @@ public class StarboardEvents {
 				avatarURL = member.GuildAvatarUrl;
 		}
 
-		DiscordWebhookBuilder wb = new DiscordWebhookBuilder();
+		var wb = new DiscordWebhookBuilder();
 		if (newMessage) {
 			wb.Username = name;
 			wb.AvatarUrl = avatarURL;
 		}
+
 		return wb
 			.AddEmbed(new DiscordEmbedBuilder()
 				.WithColor(await Util.GetMemberColor(message.Author, message.Channel.Guild))

@@ -10,7 +10,7 @@ namespace EirBot_New.AppCommands;
 
 public partial class TestCommands : AppCommandGroupBase {
 	[SlashCommand("Ping", "Sends back \"Pong.\"", true, false)]
-	public static async Task PingPong(InteractionContext context) {
+	public async static Task PingPong(InteractionContext context) {
 		await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 			.AddEmbed(new DiscordEmbedBuilder()
 				.WithTitle("!ping")
@@ -18,19 +18,19 @@ public partial class TestCommands : AppCommandGroupBase {
 				.WithDescription("Pong!")
 				.WithTimestamp(context.Interaction.CreationTimestamp)
 				.WithColor(DiscordColor.Blurple)
-				)
+			)
 		);
 	}
 
 	[SlashCommand("SayModal", "Modal test that sends a message as the bot somewhere.", true, false), ApplicationCommandRequireTeamOwner]
-	public static async Task SayModal(InteractionContext context) {
-		DiscordInteractionModalBuilder mb = new DiscordInteractionModalBuilder()
+	public async static Task SayModal(InteractionContext context) {
+		var mb = new DiscordInteractionModalBuilder()
 			.WithTitle("Speak as " + context.Client.CurrentUser.Username)
 			.WithCustomId("modal_say");
-		mb.AddTextComponent(new DiscordTextComponent(TextComponentStyle.Paragraph, "toSay", "Say...", context.Client.CurrentUser.Username + ": ", 1, 2000, true));
+		mb.AddTextComponent(new(TextComponentStyle.Paragraph, "toSay", "Say...", context.Client.CurrentUser.Username + ": ", 1, 2000, true));
 
 		await context.CreateModalResponseAsync(mb);
-		InteractivityResult<ComponentInteractionCreateEventArgs> result = await context.Client.GetInteractivity().WaitForModalAsync(mb.CustomId);
+		var result = await context.Client.GetInteractivity().WaitForModalAsync(mb.CustomId);
 		if (result.TimedOut) {
 			await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
 				.AsEphemeral()
@@ -39,8 +39,8 @@ public partial class TestCommands : AppCommandGroupBase {
 			return;
 		}
 
-		string toSay = string.Empty;
-		foreach (DiscordComponentResult component in result.Result.Interaction.Data.Components)
+		var toSay = string.Empty;
+		foreach (var component in result.Result.Interaction.Data.Components)
 			if (component.CustomId == "toSay") {
 				toSay = component.Value;
 				break;

@@ -7,25 +7,25 @@ namespace EirBot_New.Events.Connect4;
 
 [EventHandler]
 public class Connect4Events {
-	private static Dictionary<long, Connect4Game> games = new Dictionary<long, Connect4Game>();
+	private static Dictionary<long, Connect4Game> games = new();
 
-	public static async Task<DiscordInteractionResponseBuilder> Challenge(DiscordClient client, DiscordUser challenger, DiscordUser challengee, DiscordGuild guild) {
+	public async static Task<DiscordInteractionResponseBuilder> Challenge(DiscordClient client, DiscordUser challenger, DiscordUser challengee, DiscordGuild guild) {
 		// Create game
-		DateTimeOffset timestamp = DateTimeOffset.Now;
-		long id = timestamp.ToUnixTimeSeconds();
-		Connect4Game game = new Connect4Game() { client = client, gameID = id, timestamp = timestamp };
+		var timestamp = DateTimeOffset.Now;
+		var id = timestamp.ToUnixTimeSeconds();
+		var game = new Connect4Game() { client = client, gameID = id, timestamp = timestamp };
 		game.SetPlayers(challenger, challengee);
 		games[game.gameID] = game;
 
-		DiscordInteractionResponseBuilder rb = new DiscordInteractionResponseBuilder();
+		var rb = new DiscordInteractionResponseBuilder();
 		rb.AddEmbed(new DiscordEmbedBuilder()
 			.WithColor(await Util.GetMemberColor(challenger, guild))
 			.WithAuthor(challenger.Username, null, challenger.AvatarUrl)
-			.WithDescription(String.Format("{0}, {1} has challenged you to a Connect Four match!\nDo you accept?", challengee.Mention, challenger.Username))
+			.WithDescription(string.Format("{0}, {1} has challenged you to a Connect Four match!\nDo you accept?", challengee.Mention, challenger.Username))
 		);
 		rb.AddComponents(new DiscordComponent[] {
-			new DiscordButtonComponent(ButtonStyle.Success, "Connect4_start_" + id, "You're on!", false, new DiscordComponentEmoji(1087449113202806834)),
-			new DiscordButtonComponent(ButtonStyle.Danger, "Connect4_refuse_" + id, "Pass", false, new DiscordComponentEmoji(865085988162371624))
+				new DiscordButtonComponent(ButtonStyle.Success, "Connect4_start_" + id, "You're on!", false, new(1087449113202806834)),
+				new DiscordButtonComponent(ButtonStyle.Danger, "Connect4_refuse_" + id, "Pass", false, new(865085988162371624))
 			}
 		);
 
@@ -33,7 +33,7 @@ public class Connect4Events {
 	}
 
 	[Event(DiscordEvent.ComponentInteractionCreated)]
-	public static async Task AcceptDecline(DiscordClient client, ComponentInteractionCreateEventArgs args) {
+	public async static Task AcceptDecline(DiscordClient client, ComponentInteractionCreateEventArgs args) {
 		if (args.Message.Embeds.Count != 1)
 			return;
 
@@ -57,20 +57,20 @@ public class Connect4Events {
 			if (!games.ContainsKey(id))
 				await args.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder()
 					.WithContent("*(Game no longer active.)*")
-					);
+				);
 			else
 				await args.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder()
 					.WithContent("*Game refused.*")
-					);
-		// Accept invite
+				);
+			// Accept invite
 		} else if (args.Id.StartsWith("Connect4_start")) {
 			args.Handled = true;
 			if (!games.ContainsKey(id))
 				await args.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder()
 					.WithContent("*(Game no longer active.)*")
-					);
+				);
 			else {
-				Connect4Game game = games[id];
+				var game = games[id];
 				game.message = args.Message;
 				game.Init();
 
@@ -87,7 +87,7 @@ public class Connect4Events {
 	}
 
 	[Event(DiscordEvent.MessageReactionAdded)]
-	public static async Task UpdateGame(DiscordClient client, MessageReactionAddEventArgs args) {
+	public async static Task UpdateGame(DiscordClient client, MessageReactionAddEventArgs args) {
 		if (args.User == client.CurrentUser)
 			return;
 		if (args.Message.Embeds.Count < 1)
@@ -97,32 +97,32 @@ public class Connect4Events {
 		if (!games.ContainsKey(args.Message.Embeds[0].Timestamp.Value.ToUnixTimeSeconds()))
 			return;
 
-		Connect4Game game = games[args.Message.Embeds[0].Timestamp.Value.ToUnixTimeSeconds()];
+		var game = games[args.Message.Embeds[0].Timestamp.Value.ToUnixTimeSeconds()];
 		if (game.gameOver)
 			return;
 
 		new Thread(UpdateGame).Start(new object[] { client, args, game });
 	}
 
-	private static async void UpdateGame(object threadArgs) {
-		DiscordClient client = (DiscordClient)((object[])threadArgs)[0];
-		MessageReactionAddEventArgs args = (MessageReactionAddEventArgs)((object[])threadArgs)[1];
-		Connect4Game game = (Connect4Game)((object[])threadArgs)[2];
+	private async static void UpdateGame(object threadArgs) {
+		var client = (DiscordClient)((object[])threadArgs)[0];
+		var args = (MessageReactionAddEventArgs)((object[])threadArgs)[1];
+		var game = (Connect4Game)((object[])threadArgs)[2];
 
-		if ((game.nextTurnYellow && args.User == game.yellowPlayer) || args.User == game.redPlayer) {
-				int column = game.ParseColumn(args.Emoji);
-				if (column > -1 && game.ColumnFree(column)) {
-					game.Place(column);
-					await args.Message.ModifyAsync(game.Display());
-					if (game.gameOver)
-						new Thread(async () => await RemoveOwnReactionsAsync(args.Message)).Start();
-				}
+		if (game.nextTurnYellow && args.User == game.yellowPlayer || args.User == game.redPlayer) {
+			var column = game.ParseColumn(args.Emoji);
+			if (column > -1 && game.ColumnFree(column)) {
+				game.Place(column);
+				await args.Message.ModifyAsync(game.Display());
+				if (game.gameOver)
+					new Thread(async () => await RemoveOwnReactionsAsync(args.Message)).Start();
 			}
+		}
 
-			await args.Message.DeleteReactionAsync(args.Emoji, args.User);
+		await args.Message.DeleteReactionAsync(args.Emoji, args.User);
 	}
 
-	private static async Task RemoveOwnReactionsAsync(DiscordMessage msg) {
+	private async static Task RemoveOwnReactionsAsync(DiscordMessage msg) {
 		DiscordReaction? myReact;
 		while (true) {
 			myReact = msg.Reactions.FirstOrDefault(reaction => reaction.IsMe);

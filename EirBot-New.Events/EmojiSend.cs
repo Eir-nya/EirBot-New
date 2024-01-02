@@ -9,7 +9,7 @@ namespace EirBot_New.Events.Emoji;
 [EventHandler]
 public class EmojiEvents {
 	public const int ROWS_PER_PAGE = 4;
-	protected internal static Dictionary<ulong, EmojiPickerData> activeEmojiPickers = new Dictionary<ulong, EmojiPickerData>();
+	internal protected static Dictionary<ulong, EmojiPickerData> activeEmojiPickers = new();
 
 	public class EmojiPickerData {
 		public InteractionContext context;
@@ -29,20 +29,20 @@ public class EmojiEvents {
 
 	private static DiscordButtonComponent[] PageButtons(EmojiPickerData picker) {
 		return new DiscordButtonComponent[] {
-			new DiscordButtonComponent(ButtonStyle.Primary, "emoji_Send_" + picker.id + "_Left", "<<", picker.page == 0, new DiscordComponentEmoji(898279635379449856)),
-			new DiscordButtonComponent(ButtonStyle.Primary, null, string.Format("Page {0}/{1}", picker.page + 1, picker.totalPages), true, new DiscordComponentEmoji(963546868619571200)),
-			new DiscordButtonComponent(ButtonStyle.Primary, "emoji_Send_" + picker.id + "_Right", ">>", picker.page == picker.totalPages - 1, new DiscordComponentEmoji(898284896102015006))
+			new(ButtonStyle.Primary, "emoji_Send_" + picker.id + "_Left", "<<", picker.page == 0, new(898279635379449856)),
+			new(ButtonStyle.Primary, null, string.Format("Page {0}/{1}", picker.page + 1, picker.totalPages), true, new(963546868619571200)),
+			new(ButtonStyle.Primary, "emoji_Send_" + picker.id + "_Right", ">>", picker.page == picker.totalPages - 1, new(898284896102015006))
 		};
 	}
 
-	public static async Task PaginateEmojis(EmojiPickerData picker) {
-		DiscordWebhookBuilder wb = new DiscordWebhookBuilder()
+	public async static Task PaginateEmojis(EmojiPickerData picker) {
+		var wb = new DiscordWebhookBuilder()
 			.AddComponents(PageButtons(picker));
 
-		for (int i = picker.page * (5 * ROWS_PER_PAGE); i < Math.Min(picker.emojis.Count, (picker.page + 1) * (5 * ROWS_PER_PAGE)); i += 5) {
-			List<DiscordButtonComponent> newButtons = new List<DiscordButtonComponent>();
-			for (int j = i; j < Math.Min(i + 5, picker.emojis.Count); j++)
-				newButtons.Add(new DiscordButtonComponent(ButtonStyle.Secondary, "emoji_Send_" + picker.id + "_" + picker.emojis[j].Id, picker.emojis[j].Name, false, new DiscordComponentEmoji(picker.emojis[j])));
+		for (var i = picker.page * 5 * ROWS_PER_PAGE; i < Math.Min(picker.emojis.Count, (picker.page + 1) * 5 * ROWS_PER_PAGE); i += 5) {
+			List<DiscordButtonComponent> newButtons = new();
+			for (var j = i; j < Math.Min(i + 5, picker.emojis.Count); j++)
+				newButtons.Add(new(ButtonStyle.Secondary, "emoji_Send_" + picker.id + "_" + picker.emojis[j].Id, picker.emojis[j].Name, false, new(picker.emojis[j])));
 			wb.AddComponents(newButtons);
 		}
 
@@ -50,12 +50,12 @@ public class EmojiEvents {
 	}
 
 	[Event(DiscordEvent.ComponentInteractionCreated)]
-	public static async Task ButtonClicked(DiscordClient client, ComponentInteractionCreateEventArgs args) {
+	public async static Task ButtonClicked(DiscordClient client, ComponentInteractionCreateEventArgs args) {
 		if (!args.Id.StartsWith("emoji_Send_"))
 			return;
 
 		ulong id = 0;
-		string arg = string.Empty;
+		var arg = string.Empty;
 		string[] splitParts = args.Id.Split("_", StringSplitOptions.None);
 		if (splitParts.Length > 2)
 			id = (ulong)Convert.ToInt64(splitParts[2]);
@@ -67,7 +67,7 @@ public class EmojiEvents {
 		// Acknowledge the interaction
 		await args.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
 
-		EmojiPickerData picker = activeEmojiPickers[id];
+		var picker = activeEmojiPickers[id];
 		if (arg == "Left") {
 			picker.page--;
 			await PaginateEmojis(picker);
@@ -75,14 +75,14 @@ public class EmojiEvents {
 			picker.page++;
 			await PaginateEmojis(picker);
 		} else {
-			DiscordEmoji emoji = DiscordEmoji.FromGuildEmote(picker.context.Client, Convert.ToUInt64(arg));
-			DiscordWebhook? hook = await Util.GetOrCreateWebhook(picker.context.Client, picker.context.Channel);
+			var emoji = DiscordEmoji.FromGuildEmote(picker.context.Client, Convert.ToUInt64(arg));
+			var hook = await Util.GetOrCreateWebhook(picker.context.Client, picker.context.Channel);
 			await Util.ModifyWebhookAsync(hook, null, null, picker.context.Channel.Id);
 
 			// Attempt to get author's display name in the server
-			string name = picker.context.User.Username;
-			string avatarURL = picker.context.User.AvatarUrl;
-			DiscordMember member = await args.Channel.Guild.GetMemberAsync(args.User.Id, false);
+			var name = picker.context.User.Username;
+			var avatarURL = picker.context.User.AvatarUrl;
+			var member = await args.Channel.Guild.GetMemberAsync(args.User.Id, false);
 			if (member == null)
 				member = await args.Channel.Guild.GetMemberAsync(args.User.Id, true);
 			if (member != null) {
@@ -102,13 +102,13 @@ public class EmojiEvents {
 		}
 	}
 
-	protected internal static async Task<List<DiscordEmoji>> GetAllEmoji(DiscordClient client, DiscordGuild currentGuild, string search) {
-		List<DiscordEmoji> emoji = new List<DiscordEmoji>();
-		foreach (DiscordGuild g in client.Guilds.Values)
-			foreach (DiscordEmoji e in await g.GetEmojisAsync())
-				if (e.IsAvailable && (g != currentGuild || e.IsAnimated))
-					if (e.Name.ToLower().Contains(search.ToLower()))
-						emoji.Add(e);
+	internal protected async static Task<List<DiscordEmoji>> GetAllEmoji(DiscordClient client, DiscordGuild currentGuild, string search) {
+		List<DiscordEmoji> emoji = new();
+		foreach (var g in client.Guilds.Values)
+		foreach (DiscordEmoji e in await g.GetEmojisAsync())
+			if (e.IsAvailable && (g != currentGuild || e.IsAnimated))
+				if (e.Name.ToLower().Contains(search.ToLower()))
+					emoji.Add(e);
 		emoji.Sort((emoji1, emoji2) => emoji1.Name.CompareTo(emoji2.Name));
 		return emoji;
 	}

@@ -13,11 +13,11 @@ public partial class FunCommands : AppCommandGroupBase {
 	private const string INSPIROBOT_ICON_URL = "https://inspirobot.me/website/images/favicon.png";
 
 	[SlashCommand("Inspire", "Generates a random inspirational image using inspirobot.me.", true, false)]
-	public static async Task Inspire(InteractionContext context, [Option("Christmas", "Requests a christmas-themed inspirational image.")] bool christmas = false) {
+	public async static Task Inspire(InteractionContext context, [Option("Christmas", "Requests a christmas-themed inspirational image.")] bool christmas = false) {
 		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-		HttpClient webClient = new HttpClient();
-		CancellationTokenSource tokenSource = new CancellationTokenSource();
+		var webClient = new HttpClient();
+		var tokenSource = new CancellationTokenSource();
 		HttpResponseMessage response;
 		try {
 			response = await webClient.GetAsync(new Uri(!christmas ? INSPIROBOT_API_URL : INSPIROBOT_API_CHRISTMAS_URL), tokenSource.Token);
@@ -32,6 +32,7 @@ public partial class FunCommands : AppCommandGroupBase {
 					);
 					return;
 				}
+
 			await context.EditResponseAsync(new DiscordWebhookBuilder()
 				.AddEmbed(new DiscordEmbedBuilder()
 					.WithAuthor("Inspirobot", INSPIROBOT_URL, INSPIROBOT_ICON_URL)
@@ -40,7 +41,8 @@ public partial class FunCommands : AppCommandGroupBase {
 			);
 			return;
 		}
-		string url = await response.Content.ReadAsStringAsync();
+
+		var url = await response.Content.ReadAsStringAsync();
 
 		await context.EditResponseAsync(new DiscordWebhookBuilder()
 			.AddEmbed(new DiscordEmbedBuilder()
@@ -54,12 +56,12 @@ public partial class FunCommands : AppCommandGroupBase {
 		// Force error check - sometimes image width/height will just be 0.
 		// If so, remove the image from the embed and just upload the image as an attachment.
 		// Thanks discord.
-		DiscordEmbedImage image = (await context.GetOriginalResponseAsync()).Embeds[0].Image;
+		var image = (await context.GetOriginalResponseAsync()).Embeds[0].Image;
 		if (image.Width == 0 && image.Height == 0) {
 			// Retrieve image
-			Stream imageData = await new HttpClient().GetStreamAsync(url);
+			var imageData = await new HttpClient().GetStreamAsync(url);
 
-			string filename = url;
+			var filename = url;
 			string[] splitResults = url.Split(new string[] { "/a/" }, StringSplitOptions.None);
 			if (splitResults.Length > 1)
 				filename = splitResults[1];
