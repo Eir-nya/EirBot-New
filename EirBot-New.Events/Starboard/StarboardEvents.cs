@@ -98,7 +98,8 @@ public class StarboardEvents {
 			DiscordMessage newMessage, webhookJumpMessage = null;
 			if (hook != null) {
 				await Util.ModifyWebhookAsync(hook, null, null, starboardChannel.Id);
-				newMessage = await hook.ExecuteAsync(await CreateStarboardMessageWebhook(client, message, true));
+				DiscordWebhookBuilder dwb = await CreateStarboardMessageWebhook(client, message, true);
+				newMessage = await hook.ExecuteAsync(dwb);
 				webhookJumpMessage = await hook.ExecuteAsync(await CreateStarboardJumpMessage(client, message, true));
 			} else
 				newMessage = await starboardChannel.SendMessageAsync(await CreateStarboardMessage(client, message, true));
