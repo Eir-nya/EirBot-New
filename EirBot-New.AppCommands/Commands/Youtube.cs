@@ -1,21 +1,20 @@
+using DisCatSharp;
 using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
+using DisCatSharp.EventArgs;
+using EirBot_New.Attributes;
+using Google.Apis.Services;
+using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
+using Newtonsoft.Json.Linq;
+using NuGet.Protocol;
 
 // https://stackoverflow.com/a/21249261
 
 namespace EirBot_New.Events {
-using DisCatSharp;
-using DisCatSharp.EventArgs;
-using Google.Apis.Services;
-using Google.Apis.YouTube.v3;
-using Newtonsoft.Json.Linq;
-using NuGet.Protocol;
-using System.Linq;
-
-[EventHandler]
+// [EventHandler]
 public static class YoutubeEvents {
 	private const string YOUTUBE_VIDEO_PREFIX = "https://www.youtube.com/watch?v=";
 
@@ -42,15 +41,22 @@ public static class YoutubeEvents {
 
 	public static string apiKey;
 
+	// Run on bot ready
+	[RunOnStartup]
+	private static void RunOnStartup(DiscordShardedClient client) {
+		client.GuildDownloadCompleted += Ready;
+		client.ComponentInteractionCreated += ButtonClicked;
+	}
+
 	// Initializes API Key
-	[Event(DiscordEvent.Ready)]
-	public static async Task Ready(DiscordClient client, ReadyEventArgs args) {
+	// [Event(DiscordEvent.Ready)]
+	public static async Task Ready(DiscordClient client, GuildDownloadCompletedEventArgs args) {
 		if (File.Exists("youtube_api_key.txt"))
 			apiKey = File.ReadAllText("youtube_api_key.txt");
 	}
 
 	// Interaction with buttons on existing message
-	[Event(DiscordEvent.ComponentInteractionCreated)]
+	// [Event(DiscordEvent.ComponentInteractionCreated)]
 	public static async Task ButtonClicked(DiscordClient client, ComponentInteractionCreateEventArgs args) {
 		if (!args.Id.StartsWith("youtube_queryLink_"))
 			return;

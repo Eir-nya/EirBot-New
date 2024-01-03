@@ -1,13 +1,19 @@
 using DisCatSharp;
 using DisCatSharp.Entities;
-using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
+using EirBot_New.Attributes;
 
 namespace EirBot_New.Events;
 
-[EventHandler]
+// [EventHandler]
 public class TestCommands {
-	[Event(DiscordEvent.MessageCreated)]
+	// Run on bot ready
+	[RunOnStartup]
+	private static void RunOnStartup(DiscordShardedClient client) {
+		client.MessageCreated += PingPong;
+	}
+
+	// [Event(DiscordEvent.MessageCreated)]
 	public static async Task PingPong(DiscordClient client, MessageCreateEventArgs args) {
 		if (args.Message.Content.ToLower().StartsWith("!ping")) {
 			await new DiscordMessageBuilder()

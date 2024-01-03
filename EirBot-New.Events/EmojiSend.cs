@@ -3,10 +3,11 @@ using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Enums;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
+using EirBot_New.Attributes;
 
 namespace EirBot_New.Events.Emoji;
 
-[EventHandler]
+// [EventHandler]
 public class EmojiEvents {
 	public const int ROWS_PER_PAGE = 4;
 	protected internal static Dictionary<ulong, EmojiPickerData> activeEmojiPickers = new Dictionary<ulong, EmojiPickerData>();
@@ -25,6 +26,12 @@ public class EmojiEvents {
 			this.emojis = emojis;
 			this.totalPages = (int)MathF.Ceiling((float)emojis.Count / (5 * ROWS_PER_PAGE));
 		}
+	}
+
+	// Run on bot ready
+	[RunOnStartup]
+	private static void RunOnStartup(DiscordShardedClient client) {
+		client.ComponentInteractionCreated += ButtonClicked;
 	}
 
 	private static DiscordButtonComponent[] PageButtons(EmojiPickerData picker) {
@@ -49,7 +56,7 @@ public class EmojiEvents {
 		await picker.context.EditResponseAsync(wb);
 	}
 
-	[Event(DiscordEvent.ComponentInteractionCreated)]
+	// [Event(DiscordEvent.ComponentInteractionCreated)]
 	public static async Task ButtonClicked(DiscordClient client, ComponentInteractionCreateEventArgs args) {
 		if (!args.Id.StartsWith("emoji_Send_"))
 			return;

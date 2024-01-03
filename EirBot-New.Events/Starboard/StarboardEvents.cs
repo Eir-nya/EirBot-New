@@ -1,28 +1,41 @@
 using DisCatSharp;
 using DisCatSharp.Entities;
-using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
+using EirBot_New.Attributes;
 using EirBot_New.Serialization;
-using System.Net;
 
 namespace EirBot_New.Events.Starboard;
 
-[EventHandler]
+// [EventHandler]
 public class StarboardEvents {
 	// Maximum size of attachments to attempt to download and reupload in starboard message
 	public const int MAX_FILE_SIZE = 26214400;
 
 	public static DiscordEmoji? starEmoji;
 
+	// Run on bot ready
+	[RunOnStartup]
+	private static void RunOnStartup(DiscordShardedClient client) {
+		client.GuildDownloadCompleted += Ready;
+		client.MessageReactionAdded += ReactionAdded;
+		client.MessageReactionRemoved += ReactionRemoved;
+		client.MessageUpdated += MessageUpdated;
+		client.MessageDeleted += MessageRemoved;
+	}
+
+	private static async Task test(DiscordClient client, MessageReactionAddEventArgs args) {
+		Console.WriteLine("test");
+	}
+
 	// Initializes star emoji
-	[Event(DiscordEvent.Ready)]
-	public async Task Ready(DiscordClient client, ReadyEventArgs args) {
+	// [Event(DiscordEvent.GuildDownloadCompleted)]
+	public static async Task Ready(DiscordClient client, GuildDownloadCompletedEventArgs args) {
 		starEmoji = DiscordEmoji.FromName(client, ":star:");
 	}
 
 	// Reaction added: add to starboard and update
-	[Event(DiscordEvent.MessageReactionAdded)]
-	public async Task ReactionAdded(DiscordClient client, MessageReactionAddEventArgs args) {
+	// [Event(DiscordEvent.MessageReactionAdded)]
+	public static async Task ReactionAdded(DiscordClient client, MessageReactionAddEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
 		if (args.Emoji != starEmoji)
@@ -101,8 +114,8 @@ public class StarboardEvents {
 	}
 
 	// Reaction removed: remove from starboard or update
-	[Event(DiscordEvent.MessageReactionRemoved)]
-	public async Task ReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs args) {
+	// [Event(DiscordEvent.MessageReactionRemoved)]
+	public static async Task ReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
 		if (args.Emoji != starEmoji)
@@ -151,8 +164,8 @@ public class StarboardEvents {
 			await UpdateStarboardMessage(client, message, starboardMessage, hook);
 	}
 
-	[Event(DiscordEvent.MessageUpdated)]
-	public async Task MessageUpdated(DiscordClient client, MessageUpdateEventArgs args) {
+	// [Event(DiscordEvent.MessageUpdated)]
+	public static async Task MessageUpdated(DiscordClient client, MessageUpdateEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
 		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
@@ -188,8 +201,8 @@ public class StarboardEvents {
 		await UpdateStarboardMessage(client, message, starboardMessage, hook);
 	}
 
-	[Event(DiscordEvent.MessageDeleted)]
-	public async Task MessageRemoved(DiscordClient client, MessageDeleteEventArgs args) {
+	// [Event(DiscordEvent.MessageDeleted)]
+	public static async Task MessageRemoved(DiscordClient client, MessageDeleteEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
 		StarboardSettings? settings = GetSettings(client, args.Guild);

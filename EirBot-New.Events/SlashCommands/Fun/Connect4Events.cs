@@ -2,12 +2,20 @@ using DisCatSharp;
 using DisCatSharp.Enums;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
+using EirBot_New.Attributes;
 
 namespace EirBot_New.Events.Connect4;
 
-[EventHandler]
+// [EventHandler]
 public class Connect4Events {
 	private static Dictionary<long, Connect4Game> games = new Dictionary<long, Connect4Game>();
+
+	// Run on bot ready
+	[RunOnStartup]
+	private static void RunOnStartup(DiscordShardedClient client) {
+		client.ComponentInteractionCreated += AcceptDecline;
+		client.MessageReactionAdded += UpdateGame;
+	}
 
 	public static async Task<DiscordInteractionResponseBuilder> Challenge(DiscordClient client, DiscordUser challenger, DiscordUser challengee, DiscordGuild guild) {
 		// Create game
@@ -32,7 +40,7 @@ public class Connect4Events {
 		return rb;
 	}
 
-	[Event(DiscordEvent.ComponentInteractionCreated)]
+	// [Event(DiscordEvent.ComponentInteractionCreated)]
 	public static async Task AcceptDecline(DiscordClient client, ComponentInteractionCreateEventArgs args) {
 		if (args.Message.Embeds.Count != 1)
 			return;
@@ -86,7 +94,7 @@ public class Connect4Events {
 		}
 	}
 
-	[Event(DiscordEvent.MessageReactionAdded)]
+	// [Event(DiscordEvent.MessageReactionAdded)]
 	public static async Task UpdateGame(DiscordClient client, MessageReactionAddEventArgs args) {
 		if (args.User == client.CurrentUser)
 			return;

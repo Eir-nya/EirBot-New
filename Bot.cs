@@ -3,6 +3,7 @@ using DisCatSharp.ApplicationCommands;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Interactivity.Extensions;
+using EirBot_New.Attributes;
 using EirBot_New.Events;
 using EirBot_New.Serialization;
 using System.Reflection;
@@ -52,29 +53,24 @@ public class Bot : IDisposable {
 		// Register application commands
 		ApplicationCommandsStartup.Setup(client, commands);
 
+		// Execute all "RunOnStartup" methods
+		foreach (Type t in Assembly.GetExecutingAssembly().GetTypes()) {
+			foreach (MethodInfo mi in t.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)) {
+				if (mi.GetCustomAttribute(typeof(RunOnStartupAttribute)) != null)
+					mi.Invoke(null, new object[] { client });
+			}
+		}
+
+		// Register interactivity
+		await client.UseInteractivityAsync();
+
 		HashSet<Task> tasks = new();
 		foreach (DiscordClient cli in client.ShardClients.Values) {
 			tasks.Add(Task.Run(() => {
 				// Register event handlers
 				cli.RegisterEventHandlers(Assembly.GetExecutingAssembly());
-				// Register interactivity
-				cli.UseInteractivity();
 			}));
 		}
 		await Task.WhenAll(tasks);
-
-		/*
-		// Execute all "Ready" events that haven't been executed yet
-		foreach (Type t in Assembly.GetExecutingAssembly().GetTypes()) {
-			if (t.GetCustomAttribute(typeof(EventHandlerAttribute)) != null) {
-				foreach (MethodInfo mi in t.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) {
-					Attribute? a = mi.GetCustomAttribute<DisCatSharp.Enums.EventAttribute>();
-					if (a != null)
-						if (a.Match(new EventAttribute(DiscordEvent.Ready)))
-							mi.Invoke(null, new object[] { client, args });
-				}
-			}
-		}
-		*/
 	}
 }
