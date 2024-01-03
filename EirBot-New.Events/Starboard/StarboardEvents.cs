@@ -100,7 +100,8 @@ public class StarboardEvents {
 				await Util.ModifyWebhookAsync(hook, null, null, starboardChannel.Id);
 				DiscordWebhookBuilder dwb = await CreateStarboardMessageWebhook(client, message, true);
 				newMessage = await hook.ExecuteAsync(dwb);
-				webhookJumpMessage = await hook.ExecuteAsync(await CreateStarboardJumpMessage(client, message, true));
+				DiscordWebhookBuilder jumpDwb = await CreateStarboardJumpMessage(client, message, true);
+				webhookJumpMessage = await hook.ExecuteAsync(jumpDwb);
 			} else
 				newMessage = await starboardChannel.SendMessageAsync(await CreateStarboardMessage(client, message, true));
 
@@ -440,9 +441,9 @@ public class StarboardEvents {
 		// Attempt to get author's display name in the server
 		string name = message.Author.Username;
 		string avatarURL = message.Author.AvatarUrl;
-		DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
+		DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
 		if (member == null)
-			member = await message.Guild.GetMemberAsync(message.Author.Id, true);
+			member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
 		if (member != null) {
 			if (!string.IsNullOrEmpty(member.DisplayName))
 				name = member.DisplayName;
