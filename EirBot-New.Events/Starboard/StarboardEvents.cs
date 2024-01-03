@@ -300,12 +300,12 @@ public class StarboardEvents {
 	}
 
 	private static async Task<short> CountReactions(DiscordClient client, DiscordMessage message, DiscordChannel channel) {
-		if (message.Guild == null) {
+		if (message.Channel.Guild == null) {
 			message = await Util.GetMessageFixed(message.Id, channel);
-			if (message == null || message.Guild == null)
+			if (message == null || message.Channel.Guild == null)
 				return 0;
 		}
-		DiscordGuild guild = message.Guild;
+		DiscordGuild guild = message.Channel.Guild;
 		StarboardSettings? settings = GetSettings(client, guild);
 		if (settings == null)
 			return 0;
@@ -341,7 +341,7 @@ public class StarboardEvents {
 	private static async Task<DiscordMessageBuilder> CreateStarboardMessage(DiscordClient client, DiscordMessage message, bool newMessage) {
 		short reactions = await CountReactions(client, message, message.Channel);
 
-		bool hasNonGuildSticker = message.Stickers.Count == 1 && (message.Stickers[0].GuildId != message.GuildId || message.Stickers[0].GuildId is null);
+		bool hasNonGuildSticker = message.Stickers.Count == 1 && (message.Stickers[0].GuildId != message.Channel.Guild.Id || message.Stickers[0].GuildId is null);
 
 		(string, Dictionary<string, Stream>) attachmentData = await HandleAttachments(client, message, newMessage, false);
 		string attachmentString = attachmentData.Item1;
@@ -368,9 +368,9 @@ public class StarboardEvents {
 		// Attempt to get author's display name in the server
 		string name = message.Author.Username;
 		string avatarURL = message.Author.AvatarUrl;
-		DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
+		DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
 		if (member == null)
-			member = await message.Guild.GetMemberAsync(message.Author.Id, true);
+			member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
 		if (member != null) {
 			if (!string.IsNullOrEmpty(member.DisplayName))
 				name = member.DisplayName;
@@ -380,7 +380,7 @@ public class StarboardEvents {
 
 		return mb
 			.WithEmbed(new DiscordEmbedBuilder()
-				.WithColor(await Util.GetMemberColor(message.Author, message.Guild))
+				.WithColor(await Util.GetMemberColor(message.Author, message.Channel.Guild))
 				.WithTitle("Jump to message")
 				.WithUrl(message.JumpLink)
 				.WithAuthor(name + (message.Author.IsBot ? " [BOT]" : "") + " (⭐x" + reactions + ")", null, avatarURL)
@@ -417,9 +417,9 @@ public class StarboardEvents {
 			// Attempt to get author's display name in the server
 			string name = message.Author.Username;
 			string avatarURL = message.Author.AvatarUrl;
-			DiscordMember member = await message.Guild.GetMemberAsync(message.Author.Id, false);
+			DiscordMember member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, false);
 			if (member == null)
-				member = await message.Guild.GetMemberAsync(message.Author.Id, true);
+				member = await message.Channel.Guild.GetMemberAsync(message.Author.Id, true);
 			if (member != null) {
 				if (!string.IsNullOrEmpty(member.DisplayName))
 					name = member.DisplayName;

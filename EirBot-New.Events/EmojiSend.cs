@@ -89,9 +89,9 @@ public class EmojiEvents {
 			// Attempt to get author's display name in the server
 			string name = picker.context.User.Username;
 			string avatarURL = picker.context.User.AvatarUrl;
-			DiscordMember member = await args.Guild.GetMemberAsync(args.User.Id, false);
+			DiscordMember member = await args.Channel.Guild.GetMemberAsync(args.User.Id, false);
 			if (member == null)
-				member = await args.Guild.GetMemberAsync(args.User.Id, true);
+				member = await args.Channel.Guild.GetMemberAsync(args.User.Id, true);
 			if (member != null) {
 				if (!string.IsNullOrEmpty(member.DisplayName))
 					name = member.DisplayName;
