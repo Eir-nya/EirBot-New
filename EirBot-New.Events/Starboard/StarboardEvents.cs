@@ -461,12 +461,14 @@ public class StarboardEvents {
 		// Emoji react string
 		StarboardSettings? settings = GetSettings(client, message.Channel.Guild);
 		string reactDescription = String.Empty;
-		if (settings != null)
+		if (settings != null) {
+			reactDescription = "## ";
 			foreach (string emoji in settings.Value.acceptedEmoji) {
 				short reactions = await CountReactions(client, emoji, message, message.Channel);
 				if (reactions > 0)
-					reactDescription += "## " + emoji + " x" + reactions + "\n";
+					reactDescription += emoji + " x" + reactions + " ";
 			}
+		}
 
 		DiscordWebhookBuilder wb = new DiscordWebhookBuilder();
 		if (newMessage) {
