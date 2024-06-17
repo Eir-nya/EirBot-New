@@ -465,7 +465,7 @@ public class StarboardEvents {
 			foreach (string emoji in settings.Value.acceptedEmoji) {
 				short reactions = await CountReactions(client, emoji, message, message.Channel);
 				if (reactions > 0)
-					reactDescription += emoji + " x" + reactions + "\n";
+					reactDescription += "## " + emoji + " x" + reactions + "\n";
 			}
 
 		DiscordWebhookBuilder wb = new DiscordWebhookBuilder();
