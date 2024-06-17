@@ -30,7 +30,8 @@ public partial class StarboardCommands : AppCommandGroupBase {
 					":gear: Enabled: " + ((starboardChannel != null && !string.IsNullOrEmpty(starboardChannel.Name)) ? ":white_check_mark:" : ":x:") + "\n" +
 					":hash: Starboard channel: " + (starboardChannel != null ? starboardChannel.Mention : ":x:") + "\n" +
 					":no_bell: Ignored channels: " + (settings.Value.ignoredChannels.Count > 0 ? string.Join(", ", ignoredChannelNames) : ":x:") + "\n" +
-					":star: Minimum stars: " + settings.Value.minStars + "\n" +
+					":star: Emojis to check for: " + string.Join(", ", settings.Value.acceptedEmoji) + "\n" +
+					":1234: Minimum reacts: " + settings.Value.minStars + "\n" +
 					":underage: Allow posts from NSFW channels: " + (settings.Value.allowNSFW ? ":white_check_mark:" : ":x:") + "\n" +
 					":index_pointing_at_the_viewer: Count stars from message author: " + (settings.Value.allowSelfStar ? ":white_check_mark:" : ":x:") + "\n" +
 					":hammer: Remove on message delete: " + (settings.Value.removeWhenDeleted ? ":white_check_mark:" : ":x:") + "\n" +
@@ -199,6 +200,47 @@ public partial class StarboardCommands : AppCommandGroupBase {
 
 		await context.EditResponseAsync(new DiscordWebhookBuilder()
 			.WithContent("Starboard disabled.")
+		);
+	}
+
+	[SlashCommand("setemoji", "Sets allowed emoji for starboard.", false, false), ApplicationCommandRequireUserPermissions(Permissions.ManageChannels), ApplicationCommandRequireGuild]
+	public static async Task SetEmoji(InteractionContext context, [Option("emojistring", "List of emojis to use.", false)] string message) {
+		await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
+		ServerData? serverData = ServerData.GetServerData(context.Client, context.Guild);
+		if (serverData == null) {
+			await context.DeleteResponseAsync();
+			return;
+		}
+
+		// Parse incoming message for emojis
+		HashSet<DiscordEmoji> emojis = new HashSet<DiscordEmoji>();
+		string[] words = message.Split(" ");
+		foreach (string word in words) {
+			DiscordEmoji? newEmoji = Util.GetEmojiFromString(context.Client, word);
+			if (newEmoji != null)
+				emojis.Add(newEmoji);
+		}
+
+		// Require at least one emoji
+		if (emojis.Count == 0) {
+			await context.EditResponseAsync(new DiscordWebhookBuilder()
+				.WithContent("At least one emoji is required. To reset, simply enter `:star:`.")
+			);
+			return;
+		}
+
+		// Try set emojis
+		serverData.starboardSettings.acceptedEmoji = new HashSet<string>();
+		foreach (DiscordEmoji emoji in emojis) {
+			if (emoji.ToString().Length != 1)
+				serverData.starboardSettings.acceptedEmoji.Add(emoji.ToString());
+			else
+				serverData.starboardSettings.acceptedEmoji.Add(emoji.GetDiscordName());
+		}
+		serverData.Save();
+
+		await context.EditResponseAsync(new DiscordWebhookBuilder()
+			.WithContent("Emojis updated.\n" + string.Join(", ", serverData.starboardSettings.acceptedEmoji))
 		);
 	}
 }

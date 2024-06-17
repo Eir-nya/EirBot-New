@@ -26,6 +26,26 @@ public static class Util {
 		return guild;
 	}
 
+	public static DiscordEmoji? GetEmojiFromString(DiscordClient client, string emojiString) {
+		DiscordEmoji? newEmoji = null;
+		bool created = false;
+		try {
+			created = DiscordEmoji.TryFromName(client, emojiString, out newEmoji);
+		} catch {}
+		if (!created)
+			created = DiscordEmoji.TryFromUnicode(client, emojiString, out newEmoji);
+		if (!created)
+			if (emojiString.Length > 1 && emojiString.Substring(0, 2) == "<:" && emojiString.Substring(emojiString.Length - 1) == ">") {
+				int idStartsAt = emojiString.IndexOf(":", 2) + 1;
+				created = DiscordEmoji.TryFromGuildEmote(client, Convert.ToUInt64(emojiString.Substring(idStartsAt, emojiString.Length - idStartsAt - 1)), out newEmoji);
+			}
+		return newEmoji;
+	}
+
+	public static string GetUniversalEmojiString(DiscordEmoji emoji) {
+		return "<:" + emoji.Name + ":" + emoji.Id + ">";
+	}
+
 	public static async Task<DiscordColor> GetMemberColor(DiscordClient client, DiscordUser user, ulong guildID) {
 		DiscordGuild? guild = await GetGuildAsync(client, guildID);
 		if (guild != null)
@@ -92,9 +112,5 @@ public static class Util {
 		try {
 			await modalInteraction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder().AsEphemeral().WithContent("_ _"));
 		} catch {}
-	}
-
-	public static string GetUniversalEmojiString(DiscordEmoji emoji) {
-		return "<:" + emoji.Name + ":" + emoji.Id + ">";
 	}
 }

@@ -11,26 +11,13 @@ public class StarboardEvents {
 	// Maximum size of attachments to attempt to download and reupload in starboard message
 	public const int MAX_FILE_SIZE = 26214400;
 
-	public static DiscordEmoji? starEmoji;
-
 	// Run on bot ready
 	[RunOnStartup]
 	private static void RunOnStartup(DiscordShardedClient client) {
-		client.GuildDownloadCompleted += Ready;
 		client.MessageReactionAdded += ReactionAdded;
 		client.MessageReactionRemoved += ReactionRemoved;
 		client.MessageUpdated += MessageUpdated;
 		client.MessageDeleted += MessageRemoved;
-	}
-
-	private static async Task test(DiscordClient client, MessageReactionAddEventArgs args) {
-		Console.WriteLine("test");
-	}
-
-	// Initializes star emoji
-	// [Event(DiscordEvent.GuildDownloadCompleted)]
-	public static async Task Ready(DiscordClient client, GuildDownloadCompletedEventArgs args) {
-		starEmoji = DiscordEmoji.FromName(client, ":star:");
 	}
 
 	// Reaction added: add to starboard and update
@@ -38,13 +25,13 @@ public class StarboardEvents {
 	public static async Task ReactionAdded(DiscordClient client, MessageReactionAddEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
-		if (args.Emoji != starEmoji)
-			return;
 		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
 		// if (args.Message.Author == client.CurrentUser)
 		// 	return;
 		StarboardSettings? settings = GetSettings(client, args.Guild);
 		if (settings == null)
+			return;
+		if (!settings.Value.acceptedEmoji.Contains(args.Emoji.ToString()) && !settings.Value.acceptedEmoji.Contains(args.Emoji.GetDiscordName()))
 			return;
 		if (args.Channel.IsNsfw && !settings.Value.allowNSFW)
 			return;
@@ -120,13 +107,13 @@ public class StarboardEvents {
 	public static async Task ReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs args) {
 		if (args.Channel.IsPrivate)
 			return;
-		if (args.Emoji != starEmoji)
-			return;
 		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
 		// if (message.Author == client.CurrentUser)
 		// 	return;
 		StarboardSettings? settings = GetSettings(client, args.Guild);
 		if (settings == null)
+			return;
+		if (!settings.Value.acceptedEmoji.Contains(args.Emoji.ToString()) && !settings.Value.acceptedEmoji.Contains(args.Emoji.GetDiscordName()))
 			return;
 		if (args.Channel.IsNsfw && !settings.Value.allowNSFW)
 			return;
@@ -301,7 +288,7 @@ public class StarboardEvents {
 		return guild.GetChannel(settings.Value.channelID);
 	}
 
-	private static async Task<short> CountReactions(DiscordClient client, DiscordMessage message, DiscordChannel channel) {
+	private static async Task<short> CountReactions(DiscordClient client, string emoji, DiscordMessage message, DiscordChannel channel) {
 		if (message.Channel.Guild == null) {
 			message = await Util.GetMessageFixed(message.Id, channel);
 			if (message == null || message.Channel.Guild == null)
@@ -313,11 +300,33 @@ public class StarboardEvents {
 			return 0;
 
 		short count = 0;
-		IReadOnlyList<DiscordUser> reacters = await message.GetReactionsAsync(starEmoji);
+		IReadOnlyList<DiscordUser> reacters = await message.GetReactionsAsync(Util.GetEmojiFromString(client, emoji));
 		foreach (DiscordUser user in reacters)
 			if (user != message.Author || settings.Value.allowSelfStar)
 				count++;
 		return count;
+	}
+
+	private static async Task<short> CountReactions(DiscordClient client, DiscordMessage message, DiscordChannel channel) {
+		if (message.Channel.Guild == null) {
+			message = await Util.GetMessageFixed(message.Id, channel);
+			if (message == null || message.Channel.Guild == null)
+				return 0;
+		}
+		DiscordGuild guild = message.Channel.Guild;
+		StarboardSettings? settings = GetSettings(client, guild);
+		if (settings == null)
+			return 0;
+
+		// Keep track of reacting users and check on all enabled emojis
+		HashSet<DiscordUser> reactingUsers = new HashSet<DiscordUser>();
+		foreach (string emoji in settings.Value.acceptedEmoji) {
+			IReadOnlyList<DiscordUser> reacters = await message.GetReactionsAsync(Util.GetEmojiFromString(client, emoji));
+			foreach (DiscordUser user in reacters)
+				if (user != message.Author || settings.Value.allowSelfStar)
+					reactingUsers.Add(user);
+		}
+		return (short)reactingUsers.Count;
 	}
 
 	// Returns "attachments string" for embedding too-large attachments (>25 MB)
@@ -436,8 +445,6 @@ public class StarboardEvents {
 	}
 
 	private static async Task<DiscordWebhookBuilder> CreateStarboardJumpMessage(DiscordClient client, DiscordMessage message, bool newMessage) {
-		short reactions = await CountReactions(client, message, message.Channel);
-
 		// Attempt to get author's display name in the server
 		string name = message.Author.Username;
 		string avatarURL = message.Author.AvatarUrl;
@@ -451,6 +458,16 @@ public class StarboardEvents {
 				avatarURL = member.GuildAvatarUrl;
 		}
 
+		// Emoji react string
+		StarboardSettings? settings = GetSettings(client, message.Channel.Guild);
+		string reactDescription = String.Empty;
+		if (settings != null)
+			foreach (string emoji in settings.Value.acceptedEmoji) {
+				short reactions = await CountReactions(client, emoji, message, message.Channel);
+				if (reactions > 0)
+					reactDescription += emoji + " x" + reactions + "\n";
+			}
+
 		DiscordWebhookBuilder wb = new DiscordWebhookBuilder();
 		if (newMessage) {
 			wb.Username = name;
@@ -458,10 +475,11 @@ public class StarboardEvents {
 		}
 		return wb
 			.AddEmbed(new DiscordEmbedBuilder()
-				.WithColor(await Util.GetMemberColor(message.Author, message.Guild))
+				.WithColor(await Util.GetMemberColor(message.Author, message.Channel.Guild))
 				.WithTitle("Jump to message")
 				.WithUrl(message.JumpLink)
-				.WithAuthor(name + (message.Author.IsBot ? " [BOT]" : "") + " (⭐x" + reactions + ")", null, avatarURL)
+				.WithAuthor(name + (message.Author.IsBot ? " [BOT]" : ""), null, avatarURL)
+				.WithDescription(reactDescription)
 				.WithTimestamp(message.Timestamp)
 			);
 	}
