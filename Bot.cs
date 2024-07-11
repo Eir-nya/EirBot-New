@@ -24,8 +24,21 @@ public class Bot : IDisposable {
 		client.GuildDownloadCompleted += async (cli, e) => await Register(cli, this);
 		await RegisterEvents(client);
 		client.GuildDownloadCompleted += SetInitialStatus;
-		await client.StartAsync();
-		await Task.Delay(-1);
+
+		bool connected = false;
+		client.Zombied += async (DiscordClient client, ZombiedEventArgs args) => { connected = false; };
+
+		while (true) {
+			try {
+				await client.StartAsync();
+				connected = true;
+			// Couldn't connect to Discord.
+			} catch (System.TimeoutException) {}
+			do
+				await Task.Delay(60 * 1000);
+			while (connected);
+			await client.StopAsync();
+		}
 	}
 
 	public void Dispose() {
