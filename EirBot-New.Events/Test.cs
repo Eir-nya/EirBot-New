@@ -9,8 +9,8 @@ namespace EirBot_New.Events;
 public class TestCommands {
 	// Run on bot ready
 	[RunOnStartup]
-	private static void RunOnStartup(DiscordShardedClient client) {
-		client.MessageCreated += PingPong;
+	private static void RunOnStartup(DiscordShardedClient client, Bot bot) {
+		client.MessageCreated += async (DiscordClient client, MessageCreateEventArgs args) => bot.AddTask(() => PingPong(client, args));
 	}
 
 	// [Event(DiscordEvent.MessageCreated)]

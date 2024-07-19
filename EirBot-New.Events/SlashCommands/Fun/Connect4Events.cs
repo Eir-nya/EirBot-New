@@ -12,9 +12,9 @@ public class Connect4Events {
 
 	// Run on bot ready
 	[RunOnStartup]
-	private static void RunOnStartup(DiscordShardedClient client) {
-		client.ComponentInteractionCreated += AcceptDecline;
-		client.MessageReactionAdded += UpdateGame;
+	private static void RunOnStartup(DiscordShardedClient client, Bot bot) {
+		client.ComponentInteractionCreated += async (DiscordClient client, ComponentInteractionCreateEventArgs args) => bot.AddTask(() => AcceptDecline(client, args));
+		client.MessageReactionAdded += async (DiscordClient client, MessageReactionAddEventArgs args) => bot.AddTask(() => UpdateGame(client, args));
 	}
 
 	public static async Task<DiscordInteractionResponseBuilder> Challenge(DiscordClient client, DiscordUser challenger, DiscordUser challengee, DiscordGuild guild) {

@@ -30,8 +30,8 @@ public class EmojiEvents {
 
 	// Run on bot ready
 	[RunOnStartup]
-	private static void RunOnStartup(DiscordShardedClient client) {
-		client.ComponentInteractionCreated += ButtonClicked;
+	private static void RunOnStartup(DiscordShardedClient client, Bot bot) {
+		client.ComponentInteractionCreated += async (DiscordClient client, ComponentInteractionCreateEventArgs args) => bot.AddTask(() => ButtonClicked(client, args));
 	}
 
 	private static DiscordButtonComponent[] PageButtons(EmojiPickerData picker) {

@@ -16,6 +16,9 @@ public class Bot : IDisposable {
 	public static Dictionary<DiscordClient, Bot> botInstances = new Dictionary<DiscordClient, Bot>();
 	public static Bot GetBot(DiscordClient cli) { return botInstances[cli]; }
 
+	private Queue<Func<Task>> taskQueue = new Queue<Func<Task>>();
+	private Task queueTask;
+
 	public Bot(DiscordShardedClient client) {
 		this.client = client;
 	}
@@ -30,6 +33,7 @@ public class Bot : IDisposable {
 
 		while (true) {
 			try {
+				queueTask = Task.Run(DoTaskQueue);
 				await client.StartAsync();
 				connected = true;
 			// Couldn't connect to Discord.
@@ -37,7 +41,23 @@ public class Bot : IDisposable {
 			do
 				await Task.Delay(60 * 1000);
 			while (connected);
+
+			queueTask.Dispose();
+			taskQueue.Clear();
 			await client.StopAsync();
+		}
+	}
+
+	public void AddTask(Func<Task> f) {
+		taskQueue.Enqueue(f);
+	}
+
+	private async Task DoTaskQueue() {
+		while (true) {
+			if (taskQueue.Count == 0)
+				await Task.Delay(1000);
+			else
+				await taskQueue.Dequeue()();
 		}
 	}
 
@@ -58,7 +78,7 @@ public class Bot : IDisposable {
 		await client.UpdateStatusAsync(new DiscordActivity("with code", ActivityType.Playing));
 	}
 
-	public static async Task RegisterEvents(DiscordShardedClient client) {
+	public async Task RegisterEvents(DiscordShardedClient client) {
 		IReadOnlyDictionary<int, ApplicationCommandsExtension> commands = await client.UseApplicationCommandsAsync(new ApplicationCommandsConfiguration() {
 			// DebugStartup = true,
 			EnableDefaultHelp = false
@@ -70,7 +90,7 @@ public class Bot : IDisposable {
 		foreach (Type t in Assembly.GetExecutingAssembly().GetTypes()) {
 			foreach (MethodInfo mi in t.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)) {
 				if (mi.GetCustomAttribute(typeof(RunOnStartupAttribute)) != null)
-					mi.Invoke(null, new object[] { client });
+					mi.Invoke(null, new object[] { client, this });
 			}
 		}
 

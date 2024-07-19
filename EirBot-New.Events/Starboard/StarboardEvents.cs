@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
@@ -13,16 +14,17 @@ public class StarboardEvents {
 
 	// Run on bot ready
 	[RunOnStartup]
-	private static void RunOnStartup(DiscordShardedClient client) {
-		client.MessageReactionAdded += ReactionAdded;
-		client.MessageReactionRemoved += ReactionRemoved;
-		client.MessageUpdated += MessageUpdated;
-		client.MessageDeleted += MessageRemoved;
+	private static void RunOnStartup(DiscordShardedClient client, Bot bot) {
+		client.MessageReactionAdded += async (DiscordClient client, MessageReactionAddEventArgs args) => bot.AddTask(() => ReactionAdded(client, args));
+		client.MessageReactionRemoved += async (DiscordClient client, MessageReactionRemoveEventArgs args) => bot.AddTask(() => ReactionRemoved(client, args));
+		client.MessageUpdated += async (DiscordClient client, MessageUpdateEventArgs args) => bot.AddTask(() => MessageUpdated(client, args));
+		client.MessageDeleted += async (DiscordClient client, MessageDeleteEventArgs args) => bot.AddTask(() => MessageRemoved(client, args));
 	}
 
 	// Reaction added: add to starboard and update
 	// [Event(DiscordEvent.MessageReactionAdded)]
 	public static async Task ReactionAdded(DiscordClient client, MessageReactionAddEventArgs args) {
+		Console.WriteLine("REACTION ADDED");
 		if (args.Channel.IsPrivate)
 			return;
 		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);
@@ -105,6 +107,7 @@ public class StarboardEvents {
 	// Reaction removed: remove from starboard or update
 	// [Event(DiscordEvent.MessageReactionRemoved)]
 	public static async Task ReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs args) {
+		Console.WriteLine("REACTION REMOVED");
 		if (args.Channel.IsPrivate)
 			return;
 		DiscordMessage message = await Util.VerifyMessage(args.Message, args.Channel);

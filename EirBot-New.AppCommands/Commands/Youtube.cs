@@ -43,9 +43,9 @@ public static class YoutubeEvents {
 
 	// Run on bot ready
 	[RunOnStartup]
-	private static void RunOnStartup(DiscordShardedClient client) {
-		client.GuildDownloadCompleted += Ready;
-		client.ComponentInteractionCreated += ButtonClicked;
+	private static void RunOnStartup(DiscordShardedClient client, Bot bot) {
+		client.GuildDownloadCompleted += async (DiscordClient client, GuildDownloadCompletedEventArgs args) => bot.AddTask(() => Ready(client, args));
+		client.ComponentInteractionCreated += async (DiscordClient client, ComponentInteractionCreateEventArgs args) => bot.AddTask(() => ButtonClicked(client, args));
 	}
 
 	// Initializes API Key
