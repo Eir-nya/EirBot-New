@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <RootNamespace>EirBot_New</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -11,14 +11,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DisCatSharp" Version="10.6.2-nightly-012" />
-    <PackageReference Include="DisCatSharp.Analyzer.Roselyn" Version="6.2.2">
+    <PackageReference Include="DisCatSharp" Version="10.6.6-nightly-018" />
+    <PackageReference Include="DisCatSharp.Analyzer.Roselyn" Version="6.2.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="DisCatSharp.ApplicationCommands" Version="10.6.2-nightly-012" />
-    <PackageReference Include="DisCatSharp.Common" Version="10.6.2-nightly-012" />
-    <PackageReference Include="DisCatSharp.Interactivity" Version="10.6.2-nightly-012" />
+    <PackageReference Include="DisCatSharp.ApplicationCommands" Version="10.6.6-nightly-018" />
+    <PackageReference Include="DisCatSharp.Common" Version="10.6.6-nightly-018" />
+    <PackageReference Include="DisCatSharp.Interactivity" Version="10.6.6-nightly-018" />
     <PackageReference Include="FFmpegArgs.Executes" Version="1.5.2" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.64.0.3205" />
   </ItemGroup>
